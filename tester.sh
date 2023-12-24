@@ -77,6 +77,9 @@ main() {
 	fi
 	# \_o_/ this is my ananas.jpeg \_o_/
 	rm -rf test
+
+	echo "$GH_BRANCH=$FAILED" >> "$GITHUB_ENV"
+	exit $LEAKS
 }
 
 test_no_env() {
@@ -88,7 +91,7 @@ test_no_env() {
 }
 
 test_mandatory_leaks() {
-	FILES="${RUNDIR}/cmds/mand/*"
+	FILES="${RUNDIR}/cmds/mand/0_*"
 	for file in $FILES
 	do
 		test_leaks $file

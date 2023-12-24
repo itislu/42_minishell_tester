@@ -91,7 +91,7 @@ test_no_env() {
 }
 
 test_mandatory_leaks() {
-	FILES="${RUNDIR}/cmds/mand/0_*"
+	FILES="${RUNDIR}/cmds/mand/*"
 	for file in $FILES
 	do
 		test_leaks $file

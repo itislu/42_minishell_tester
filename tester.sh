@@ -320,7 +320,9 @@ test_leaks() {
 			# echo "$possibly_lost"
 			# echo "$indirectly_lost"
 			# Check if any bytes were lost
-			if [ "$definitely_lost" != "0" ] || [ "$possibly_lost" != "0" ] || [ "$indirectly_lost" != "0" ];
+			if ([ -n "$definitely_lost" ] && [ "$definitely_lost" -ne 0 ]) || \
+				([ -n "$possibly_lost" ] && [ "$possibly_lost" -ne 0 ]) || \
+				([ -n "$indirectly_lost" ] && [ "$indirectly_lost" -ne 0 ]);
 			then
 				echo -ne "❌ "
 				((LEAKS++))

@@ -51,11 +51,11 @@ main() {
 		echo -e "  🚀                                  \033[1;34mBONUS\033[m                                     🚀"
 		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
 		test_bonus
-	elif [[ $1 == "vb" ]] ; then
+	elif [[ $1 == "va" ]] ; then
 		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		echo -e "  🚀                            \033[1;34mBONUS_LEAKS\033[m                                     🚀"
+		echo -e "  🚀                            \033[1;34mALL_LEAKS\033[m                                       🚀"
 		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		test_bonus_leaks
+		test_all_leaks
 	elif [[ $1 == "a" ]] ; then
 		test_mandatory
 		test_bonus
@@ -71,7 +71,7 @@ main() {
 		echo "usage: mstest [m,vm,ne,b,a]"
 		echo "m: mandatory tests"
 		echo "vm: mandatory tests with valgrind"
-		echo "vb: bonus tests with valgrind"
+		echo "va: all tests with valgrind"
 		echo "ne: tests without environment"
 		echo "b: bonus tests"
 		echo "a: mandatory and bonus tests"
@@ -128,8 +128,8 @@ test_bonus() {
 	done
 }
 
-test_bonus_leaks() {
-	FILES="${RUNDIR}/cmds/bonus/*"
+test_all_leaks() {
+	FILES="${RUNDIR}/cmds/**/*.sh"
 	for file in $FILES
 	do
 		test_leaks $file

@@ -329,13 +329,15 @@ test_leaks() {
 			definitely_lost=$(cat tmp_valgrind-out.txt | grep "definitely lost:" | awk 'END{print $4}')
 			possibly_lost=$(cat tmp_valgrind-out.txt | grep "possibly lost:" | awk 'END{print $4}')
 			indirectly_lost=$(cat tmp_valgrind-out.txt | grep "indirectly lost:" | awk 'END{print $4}')
+			error_summary=$(cat tmp_valgrind-out.txt | grep "ERROR SUMMARY:" | awk 'END{print $4}')
 			# echo "$definitely_lost"
 			# echo "$possibly_lost"
 			# echo "$indirectly_lost"
 			# Check if any bytes were lost
 			if ([ -n "$definitely_lost" ] && [ "$definitely_lost" -ne 0 ]) || \
 				([ -n "$possibly_lost" ] && [ "$possibly_lost" -ne 0 ]) || \
-				([ -n "$indirectly_lost" ] && [ "$indirectly_lost" -ne 0 ]);
+				([ -n "$indirectly_lost" ] && [ "$indirectly_lost" -ne 0 ]) || \
+				([ -n "$error_summary" ] && [ "$error_summary" -ne 0 ]);
 			then
 				echo -ne "❌ "
 				((LEAKS++))

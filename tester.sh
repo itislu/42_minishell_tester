@@ -259,8 +259,8 @@ test_from_file() {
 }
 
 test_leaks() {
-	valgrind_ignore="cat chmod cp diff find git grep head ls make man mkdir mv \
-	ncdu norminette ps rm sort tail time top touch wc which yes"
+	valgrind_ignore_rel_path="norminette"
+	valgrind_ignore_abs_path="/bin/* /usr/bin/*"
 	valgrind_flags=(
 	--errors-for-leak-kinds=all
 	--leak-check=full
@@ -268,7 +268,7 @@ test_leaks() {
 	--show-leak-kinds=all
 	--suppressions=$MINISHELL_PATH/minishell.supp
 	--trace-children=yes
-	--trace-children-skip=$(echo $(which $valgrind_ignore) | tr ' ' ',')
+	--trace-children-skip=$(echo $valgrind_ignore_abs_path $(which $valgrind_ignore_rel_path) | tr ' ' ',')
 	--track-fds=yes	# Change to --track-fds=all later
 	--track-origins=yes
 	--verbose

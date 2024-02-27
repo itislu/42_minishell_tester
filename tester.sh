@@ -85,7 +85,11 @@ main() {
 	rm -rf test
 
 	echo "$GH_BRANCH=$FAILED" >> "$GITHUB_ENV"
-	exit $LEAKS
+	if [[ $LEAKS -ne 0 ]] ; then
+		exit 1
+	else
+		exit 0
+	fi
 }
 
 test_no_env() {

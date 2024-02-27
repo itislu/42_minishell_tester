@@ -269,6 +269,7 @@ test_leaks() {
 	--suppressions=$MINISHELL_PATH/minishell.supp
 	--trace-children=yes
 	--trace-children-skip=$(echo $(which $valgrind_ignore) | tr ' ' ',')
+	--track-fds=yes	# Change to --track-fds=all later
 	--track-origins=yes
 	--verbose
 	--log-file=tmp_valgrind-out.txt)
@@ -351,6 +352,12 @@ test_leaks() {
 					break
 				fi
 			done
+			# Get all open file descriptors not inherited from parent
+			open_file_descriptors=$(awk '/Open file descriptor/ {fd=$0; getline; if ($0 !~ /<inherited from parent>/) print fd}' tmp_valgrind-out.txt)
+			if [ -n "$open_file_descriptors" ]
+			then
+				leak_found=1
+			fi
 			if [ "$leak_found" -ne 0 ]
 			then
 				echo -ne "❌ "

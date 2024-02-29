@@ -248,6 +248,20 @@ test_from_file() {
 			((i++))
 			((TEST_COUNT++))
 			echo -e "\033[0;90m$1:$tmp_line_count\033[m  "
+			if [[ $ONE != 1 ]] ;
+			then
+				echo -e "\033[1;34mbash STD_OUT:\033[m"
+				cat tmp_out_bash
+				echo -e "\033[1;34mminishell STD_OUT:\033[m"
+				cat tmp_out_minishell
+			fi
+			if [[ $TWO != 1 ]] ;
+			then
+				echo -e "\033[1;34mbash STD_ERR:\033[m"
+				cat tmp_err_bash
+				echo -e "\033[1;34mminishell STD_ERR:\033[m"
+				cat tmp_err_minishell
+			fi
 			if [[ $ONE == 1 && $TWO == 1 && $THREE == 1 ]] ;
 			then
 				((GOOD_TEST++))
@@ -394,6 +408,20 @@ test_leaks() {
 			((i++))
 			((TEST_COUNT++))
 			echo -e "\033[0;90m$1:$tmp_line_count\033[m  "
+			if [[ $ONE != 1 ]] ;
+			then
+				echo -e "\033[1;34mbash STD_OUT:\033[m"
+				cat tmp_out_bash
+				echo -e "\033[1;34mminishell STD_OUT:\033[m"
+				cat tmp_out_minishell
+			fi
+			if [[ $TWO != 1 ]] ;
+			then
+				echo -e "\033[1;34mbash STD_ERR:\033[m"
+				cat tmp_err_bash
+				echo -e "\033[1;34mminishell STD_ERR:\033[m"
+				cat tmp_err_minishell
+			fi
 			if [[ $ONE == 1 && $TWO == 1 && $THREE == 1 ]] ;
 			then
 				((GOOD_TEST++))
@@ -479,6 +507,20 @@ test_without_env() {
 			((i++))
 			((TEST_COUNT++))
 			echo -e "\033[0;90m$1:$tmp_line_count\033[m  "
+			if [[ $ONE != 1 ]] ;
+			then
+				echo -e "\033[1;34mbash STD_OUT:\033[m"
+				cat tmp_out_bash
+				echo -e "\033[1;34mminishell STD_OUT:\033[m"
+				cat tmp_out_minishell
+			fi
+			if [[ $TWO != 1 ]] ;
+			then
+				echo -e "\033[1;34mbash STD_ERR:\033[m"
+				cat tmp_err_bash
+				echo -e "\033[1;34mminishell STD_ERR:\033[m"
+				cat tmp_err_minishell
+			fi
 			if [[ $ONE == 1 && $TWO == 1 && $THREE == 1 ]] ;
 			then
 				((GOOD_TEST++))

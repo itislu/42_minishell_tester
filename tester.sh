@@ -362,8 +362,7 @@ test_leaks() {
 			open_file_descriptors=$(
 				awk '
 					# If the line starts with a PID and "Open file descriptor"
-					/^==[0-9]+== Open file descriptor/
-					{
+					/^==[0-9]+== Open file descriptor/ {
 						# Store the PID and the line
 						pid=$1
 						line=$0

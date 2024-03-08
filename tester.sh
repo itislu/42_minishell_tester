@@ -358,8 +358,26 @@ test_leaks() {
 					break
 				fi
 			done
-			# Get all open file descriptors not inherited from parent
-			open_file_descriptors=$(awk '/Open file descriptor/ {fd=$0; getline; if ($0 !~ /<inherited from parent>/) print fd}' tmp_valgrind-out.txt)
+			# Check if there are any open file descriptors not inherited from parent
+			open_file_descriptors=$(
+				awk '
+					# If the line starts with a PID and "Open file descriptor"
+					/^==[0-9]+== Open file descriptor/ {
+						# Store the PID and the line
+						pid=$1
+						line=$0
+
+						# Keep reading lines until a line that starts with the same PID gets found
+						while (getline && $1 != pid);
+
+						# Check if the line does not contain "<inherited from parent>"
+						if ($0 !~ /<inherited from parent>/)
+						{
+							print line
+						}
+					}
+				' tmp_valgrind-out.txt
+			)
 			if [ -n "$open_file_descriptors" ]
 			then
 				leak_found=1

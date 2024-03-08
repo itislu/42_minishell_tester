@@ -276,7 +276,6 @@ test_leaks() {
 	--trace-children-skip=$(echo $valgrind_ignore_abs_path $(which $valgrind_ignore_rel_path) | tr ' ' ',')
 	--track-fds=yes	# Change to --track-fds=all later
 	--track-origins=yes
-	--verbose
 	--log-file=tmp_valgrind-out.txt)
 	IFS=''
 	i=1

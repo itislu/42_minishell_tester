@@ -371,8 +371,7 @@ test_leaks() {
 						while (getline && $1 != pid);
 
 						# Check if the line does not contain "<inherited from parent>"
-						if ($0 !~ /<inherited from parent>/)
-						{
+						if ($0 !~ /<inherited from parent>/) {
 							print line
 						}
 					}

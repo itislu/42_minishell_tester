@@ -85,7 +85,11 @@ main() {
 	rm -rf test
 
 	echo "$GH_BRANCH=$FAILED" >> "$GITHUB_ENV"
-	exit $LEAKS
+	if [[ $LEAKS -ne 0 ]] ; then
+		exit 1
+	else
+		exit 0
+	fi
 }
 
 test_no_env() {
@@ -259,6 +263,20 @@ test_from_file() {
 }
 
 test_leaks() {
+	valgrind_ignore_rel_path="norminette"
+	valgrind_ignore_abs_path="/bin/* /usr/bin/*"
+	valgrind_flags=(
+	--errors-for-leak-kinds=all
+	--leak-check=full
+	--show-error-list=yes
+	--show-leak-kinds=all
+	--suppressions=$MINISHELL_PATH/minishell.supp
+	--trace-children=yes
+	--trace-children-skip=$(echo $valgrind_ignore_abs_path $(which $valgrind_ignore_rel_path) | tr ' ' ',')
+	--track-fds=yes	# Change to --track-fds=all later
+	--track-origins=yes
+	--verbose
+	--log-file=tmp_valgrind-out.txt)
 	IFS=''
 	i=1
 	end_of_file=0
@@ -324,18 +342,27 @@ test_leaks() {
 				((THREE++))
 			fi
 			echo -ne "\033[1;36mLEAKS:\033[m "
-			echo -n "$INPUT" | valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose --log-file=tmp_valgrind-out.txt $MINISHELL_PATH/$EXECUTABLE 2>/dev/null >/dev/null
-			# Get the number of bytes lost
-			definitely_lost=$(cat tmp_valgrind-out.txt | grep "definitely lost:" | awk 'END{print $4}')
-			possibly_lost=$(cat tmp_valgrind-out.txt | grep "possibly lost:" | awk 'END{print $4}')
-			indirectly_lost=$(cat tmp_valgrind-out.txt | grep "indirectly lost:" | awk 'END{print $4}')
-			# echo "$definitely_lost"
-			# echo "$possibly_lost"
-			# echo "$indirectly_lost"
-			# Check if any bytes were lost
-			if ([ -n "$definitely_lost" ] && [ "$definitely_lost" -ne 0 ]) || \
-				([ -n "$possibly_lost" ] && [ "$possibly_lost" -ne 0 ]) || \
-				([ -n "$indirectly_lost" ] && [ "$indirectly_lost" -ne 0 ]);
+			echo -n "$INPUT" | eval "valgrind ${valgrind_flags[@]} $MINISHELL_PATH/$EXECUTABLE" 2>/dev/null >/dev/null
+			# Get all error summaries
+			error_summaries=$(cat tmp_valgrind-out.txt | grep -a "ERROR SUMMARY:" | awk '{print $4}')
+			IFS=$'\n' read -rd '' -a error_summaries_array <<<"$error_summaries"
+			# Check if any error summary is not 0
+			leak_found=0
+			for error_summary in "${error_summaries_array[@]}"
+			do
+				if [ -n "$error_summary" ] && [ "$error_summary" -ne 0 ]
+				then
+					leak_found=1
+					break
+				fi
+			done
+			# Get all open file descriptors not inherited from parent
+			open_file_descriptors=$(awk '/Open file descriptor/ {fd=$0; getline; if ($0 !~ /<inherited from parent>/) print fd}' tmp_valgrind-out.txt)
+			if [ -n "$open_file_descriptors" ]
+			then
+				leak_found=1
+			fi
+			if [ "$leak_found" -ne 0 ]
 			then
 				echo -ne "❌ "
 				((LEAKS++))

@@ -4,6 +4,7 @@
 export MINISHELL_PATH=./
 export EXECUTABLE=minishell
 RUNDIR=$HOME/42_minishell_tester
+VALGRIND_OUTDIR=$MINISHELL_PATH/valgrind_output
 
 NL=$'\n'
 TAB=$'\t'
@@ -275,12 +276,13 @@ test_leaks() {
 	--trace-children-skip=$(echo $valgrind_ignore_abs_path $(which $valgrind_ignore_rel_path) | tr ' ' ',')
 	--track-fds=yes	# Change to --track-fds=all later
 	--track-origins=yes
-	--verbose
 	--log-file=tmp_valgrind-out.txt)
 	IFS=''
 	i=1
 	end_of_file=0
 	line_count=0
+	dir_name=$(basename $(dirname $1))
+	file_name=$(basename --suffix=.sh $1)
 	while [[ $end_of_file == 0 ]] ;
 	do
 		read -r line
@@ -366,6 +368,8 @@ test_leaks() {
 			then
 				echo -ne "❌ "
 				((LEAKS++))
+				mkdir -p "$VALGRIND_OUTDIR/$dir_name/$file_name" 2>/dev/null
+				cat tmp_valgrind-out.txt > "$VALGRIND_OUTDIR/$dir_name/$file_name/test_$i.txt" 2>/dev/null
 			else
 				echo -ne "✅ "
 			fi
@@ -386,6 +390,7 @@ test_leaks() {
 			fi
 		fi
 	done < "$1"
+	find "$VALGRIND_OUTDIR" -type d -empty -delete 2>/dev/null
 }
 
 test_without_env() {

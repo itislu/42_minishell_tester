@@ -278,7 +278,7 @@ test_from_file() {
 
 test_leaks() {
 	valgrind_ignore_rel_path="norminette"
-	valgrind_ignore_abs_path="/bin/* /usr/bin/*"
+	valgrind_ignore_abs_path="/bin/* /usr/bin/* /usr/sbin/*"
 	valgrind_flags=(
 	--errors-for-leak-kinds=all
 	--leak-check=full

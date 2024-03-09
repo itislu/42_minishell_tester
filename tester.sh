@@ -4,6 +4,7 @@
 export MINISHELL_PATH=./
 export EXECUTABLE=minishell
 RUNDIR=$HOME/42_minishell_tester
+TMP_OUTDIR=/tmp/minishell_tester
 VALGRIND_OUTDIR=$MINISHELL_PATH/valgrind_output
 
 NL=$'\n'
@@ -22,6 +23,7 @@ GOOD_TEST=0
 LEAKS=0
 
 main() {
+	mkdir -p "$TMP_OUTDIR"
 	if [[ ! -f $MINISHELL_PATH/$EXECUTABLE ]] ; then
 		echo -e "\033[1;31m# **************************************************************************** #"
 		echo "#                            MINISHELL NOT COMPILED                            #"
@@ -84,6 +86,7 @@ main() {
 	fi
 	# \_o_/ this is my ananas.jpeg \_o_/
 	rm -rf test
+	rm -rf "$TMP_OUTDIR" 2>/dev/null
 
 	echo "$GH_BRANCH=$FAILED" >> "$GITHUB_ENV"
 	if [[ $LEAKS -ne 0 ]] ; then
@@ -207,12 +210,12 @@ test_from_file() {
 				((line_count++))
 			done
 			# INPUT=${INPUT%?}
-			echo -n "$INPUT" | $MINISHELL_PATH/$EXECUTABLE 2>tmp_err_minishell >tmp_out_minishell
+			echo -n "$INPUT" | $MINISHELL_PATH/$EXECUTABLE 2>"$TMP_OUTDIR"/tmp_err_minishell >"$TMP_OUTDIR"/tmp_out_minishell
 			exit_minishell=$?
-			echo -n "enable -n .$NL$INPUT" | bash 2>tmp_err_bash >tmp_out_bash
+			echo -n "enable -n .$NL$INPUT" | bash --posix 2>"$TMP_OUTDIR"/tmp_err_bash >"$TMP_OUTDIR"/tmp_out_bash
 			exit_bash=$?
 			echo -ne "\033[1;34mSTD_OUT:\033[m "
-			if ! diff -q tmp_out_minishell tmp_out_bash >/dev/null ;
+			if ! diff -q "$TMP_OUTDIR"/tmp_out_minishell "$TMP_OUTDIR"/tmp_out_bash >/dev/null ;
 			then
 				echo -ne "❌  " | tr '\n' ' '
 				((TEST_KO_OUT++))
@@ -223,7 +226,7 @@ test_from_file() {
 				((ONE++))
 			fi
 			echo -ne "\033[1;33mSTD_ERR:\033[m "
-			if [[ -s tmp_err_minishell && ! -s tmp_err_bash ]] || [[ ! -s tmp_err_minishell && -s tmp_err_bash ]] ;
+			if [[ -s $TMP_OUTDIR/tmp_err_minishell && ! -s $TMP_OUTDIR/tmp_err_bash ]] || [[ ! -s $TMP_OUTDIR/tmp_err_minishell && -s $TMP_OUTDIR/tmp_err_bash ]] ;
 			then
 				echo -ne "❌  " |  tr '\n' ' '
 				((TEST_KO_ERR++))
@@ -260,6 +263,16 @@ test_from_file() {
 				THREE=0
 			fi
 		fi
+		# echo
+		# echo -n "minishell stdout: " ; echo -n "|" ; cat "$TMP_OUTDIR"/tmp_out_minishell | nl -ba | awk '{print "m: " $0}' ; echo -n "|"
+		# echo
+		# echo -n "bash stdout:      " ; echo -n "|" ; cat "$TMP_OUTDIR"/tmp_out_bash | nl -ba | awk '{print "b: " $0}' ; echo -n "|"
+		# echo
+		# echo
+		# echo -n "minishell stderr: " ; echo -n "|" ; cat "$TMP_OUTDIR"/tmp_err_minishell | nl -ba | awk '{print "m: " $0}' ; echo -n "|"
+		# echo
+		# echo -n "bash stderr:      " ; echo -n "|" ; cat "$TMP_OUTDIR"/tmp_err_bash | nl -ba | awk '{print "b: " $0}' ; echo -n "|"
+		# echo
 	done < "$1"
 }
 
@@ -306,12 +319,12 @@ test_leaks() {
 				((line_count++))
 			done
 			# INPUT=${INPUT%?}
-			echo -n "$INPUT" | $MINISHELL_PATH/$EXECUTABLE 2>tmp_err_minishell >tmp_out_minishell
+			echo -n "$INPUT" | $MINISHELL_PATH/$EXECUTABLE 2>"$TMP_OUTDIR"/tmp_err_minishell >"$TMP_OUTDIR"/tmp_out_minishell
 			exit_minishell=$?
-			echo -n "enable -n .$NL$INPUT" | bash 2>tmp_err_bash >tmp_out_bash
+			echo -n "enable -n .$NL$INPUT" | bash --posix 2>"$TMP_OUTDIR"/tmp_err_bash >"$TMP_OUTDIR"/tmp_out_bash
 			exit_bash=$?
 			echo -ne "\033[1;34mSTD_OUT:\033[m "
-			if ! diff -q tmp_out_minishell tmp_out_bash >/dev/null ;
+			if ! diff -q "$TMP_OUTDIR"/tmp_out_minishell "$TMP_OUTDIR"/tmp_out_bash >/dev/null ;
 			then
 				echo -ne "❌  " | tr '\n' ' '
 				((TEST_KO_OUT++))
@@ -322,7 +335,7 @@ test_leaks() {
 				((ONE++))
 			fi
 			echo -ne "\033[1;36mSTD_ERR:\033[m "
-			if [[ -s tmp_err_minishell && ! -s tmp_err_bash ]] || [[ ! -s tmp_err_minishell && -s tmp_err_bash ]] ;
+			if [[ -s $TMP_OUTDIR/tmp_err_minishell && ! -s $TMP_OUTDIR/tmp_err_bash ]] || [[ ! -s $TMP_OUTDIR/tmp_err_minishell && -s $TMP_OUTDIR/tmp_err_bash ]] ;
 			then
 				echo -ne "❌  " |  tr '\n' ' '
 				((TEST_KO_ERR++))
@@ -371,8 +384,7 @@ test_leaks() {
 						while (getline && $1 != pid);
 
 						# Check if the line does not contain "<inherited from parent>"
-						if ($0 !~ /<inherited from parent>/)
-						{
+						if ($0 !~ /<inherited from parent>/) {
 							print line
 						}
 					}
@@ -439,12 +451,12 @@ test_without_env() {
 				((line_count++))
 			done
 			# INPUT=${INPUT%?}
-			echo -n "$INPUT" | env -i $MINISHELL_PATH/$EXECUTABLE 2>tmp_err_minishell >tmp_out_minishell
+			echo -n "$INPUT" | env -i $MINISHELL_PATH/$EXECUTABLE 2>"$TMP_OUTDIR"/tmp_err_minishell >"$TMP_OUTDIR"/tmp_out_minishell
 			exit_minishell=$?
-			echo -n "enable -n .$NL$INPUT" | env -i bash 2>tmp_err_bash >tmp_out_bash
+			echo -n "enable -n .$NL$INPUT" | env -i bash --posix 2>"$TMP_OUTDIR"/tmp_err_bash >"$TMP_OUTDIR"/tmp_out_bash
 			exit_bash=$?
 			echo -ne "\033[1;34mSTD_OUT:\033[m "
-			if ! diff -q tmp_out_minishell tmp_out_bash >/dev/null ;
+			if ! diff -q "$TMP_OUTDIR"/tmp_out_minishell "$TMP_OUTDIR"/tmp_out_bash >/dev/null ;
 			then
 				echo -ne "❌  " | tr '\n' ' '
 				((TEST_KO_OUT++))
@@ -455,7 +467,7 @@ test_without_env() {
 				((ONE++))
 			fi
 			echo -ne "\033[1;36mSTD_ERR:\033[m "
-			if [[ -s tmp_err_minishell && ! -s tmp_err_bash ]] || [[ ! -s tmp_err_minishell && -s tmp_err_bash ]] ;
+			if [[ -s $TMP_OUTDIR/tmp_err_minishell && ! -s $TMP_OUTDIR/tmp_err_bash ]] || [[ ! -s $TMP_OUTDIR/tmp_err_minishell && -s $TMP_OUTDIR/tmp_err_bash ]] ;
 			then
 				echo -ne "❌  " |  tr '\n' ' '
 				((TEST_KO_ERR++))

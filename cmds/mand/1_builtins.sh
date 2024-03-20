@@ -229,15 +229,15 @@ pwd
 
 cd '/////' 2>/dev/null
 
-cd '/etc' 
+cd '/etc'
 
-cd '/var' 
+cd '/var'
 
-cd "doesntexist" 2>/dev/null 
+cd "doesntexist" 2>/dev/null
 
 cd ../../..
 
-cd "wtf" 2>/dev/null 
+cd "wtf" 2>/dev/null
 
 cd ?
 
@@ -249,7 +249,7 @@ cd woof
 
 cd bark bark
 
-cd '/' 
+cd '/'
 
 pwd
 cd "doesntexist"
@@ -315,7 +315,7 @@ pwd
 
 # might need to change the directory by yourself, that supposed to be valid =)
 pwd
-cd includes/ djhwbdhwbd wgdyuhgw jdwjdh wuiydjwh 
+cd includes/ djhwbdhwbd wgdyuhgw jdwjdh wuiydjwh
 pwd
 
 pwd
@@ -342,7 +342,7 @@ pwd
 
 # might need to change the directory by yourself, that supposed to be valid =)
 pwd
-cd ../libft ojid iowjiojwoid joijd owjoid jwojd 
+cd ../libft ojid iowjiojwoid joijd owjoid jwojd
 pwd
 
 ### ENV ###
@@ -404,7 +404,7 @@ export test
 
 export TEST
 
-export $? 
+export $?
 
 export TEST
 
@@ -538,13 +538,13 @@ export TEST=100
 
 unset doesntexist
 
-unset OLDPWD 
+unset OLDPWD
 
-unset PATH 
+unset PATH
 
-unset PATH 
+unset PATH
 
-unset PATH 
+unset PATH
 
 unset TES;T
 
@@ -624,6 +624,10 @@ unset HOME
 /bin/echo $HOME
 
 ###  EXIT ###
+
+exit 11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+
+exit 99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999
 
 exit 9223372036854775807
 
@@ -711,4 +715,4 @@ exit cd ..
 
 exit exit
 
-exit 42 42 42 42 42 
+exit 42 42 42 42 42

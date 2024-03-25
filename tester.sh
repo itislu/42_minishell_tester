@@ -88,7 +88,7 @@ main() {
 	rm -rf test
 	rm -rf "$TMP_OUTDIR" 2>/dev/null
 
-	echo "$GH_BRANCH=$FAILED" >> "$GITHUB_ENV"
+	# echo "$GH_BRANCH=$FAILED" >> "$GITHUB_ENV"
 	if [[ $LEAKS -ne 0 ]] ; then
 		exit 1
 	else
@@ -263,16 +263,16 @@ test_from_file() {
 				THREE=0
 			fi
 		fi
-		# echo
-		# echo -n "minishell stdout: " ; echo -n "|" ; cat "$TMP_OUTDIR"/tmp_out_minishell | nl -ba | awk '{print "m: " $0}' ; echo -n "|"
-		# echo
-		# echo -n "bash stdout:      " ; echo -n "|" ; cat "$TMP_OUTDIR"/tmp_out_bash | nl -ba | awk '{print "b: " $0}' ; echo -n "|"
-		# echo
-		# echo
-		# echo -n "minishell stderr: " ; echo -n "|" ; cat "$TMP_OUTDIR"/tmp_err_minishell | nl -ba | awk '{print "m: " $0}' ; echo -n "|"
-		# echo
-		# echo -n "bash stderr:      " ; echo -n "|" ; cat "$TMP_OUTDIR"/tmp_err_bash | nl -ba | awk '{print "b: " $0}' ; echo -n "|"
-		# echo
+		echo
+		echo -n "minishell stdout: " ; echo -n "|" ; cat "$TMP_OUTDIR"/tmp_out_minishell | nl -ba | awk '{print "m: " $0}' ; echo -n "|"
+		echo
+		echo -n "bash stdout:      " ; echo -n "|" ; cat "$TMP_OUTDIR"/tmp_out_bash | nl -ba | awk '{print "b: " $0}' ; echo -n "|"
+		echo
+		echo
+		echo -n "minishell stderr: " ; echo -n "|" ; cat "$TMP_OUTDIR"/tmp_err_minishell | nl -ba | awk '{print "m: " $0}' ; echo -n "|"
+		echo
+		echo -n "bash stderr:      " ; echo -n "|" ; cat "$TMP_OUTDIR"/tmp_err_bash | nl -ba | awk '{print "b: " $0}' ; echo -n "|"
+		echo
 	done < "$1"
 }
 

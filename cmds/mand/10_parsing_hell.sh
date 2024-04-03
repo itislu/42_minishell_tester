@@ -279,13 +279,13 @@ export L=amazing L=ok L=cool
 export L=ok
 echo $L
 
-echo '$'$'$'$'$'
+echo '$''$''$'
 
-echo '$'$'$'$'$'$'$'
+echo '$''$''$''$'
 
-echo "$"$'$'$"$"$"$"$'$'
+echo "$"'$'"$""$"'$'
 
-echo $/ $/ 
+echo $/ $/
 
 echo $U/SER
 

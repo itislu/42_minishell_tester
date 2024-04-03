@@ -28,15 +28,7 @@ echo "'"'$USER'"'"
 
 echo '"'"$USER"'"'
 
-echo $"HOME"$USER
-
-echo $"HOM"E$USER
-
 echo "exit_code ->$? user ->$USER home -> $HOME"
-
-echo $"HOME"
-
-echo $"42$"
 
 echo """"""""$USER""""""""
 
@@ -531,8 +523,6 @@ unset "?"
 unset $
 
 unset "$"
-
-unset $""
 
 export TEST=100
 

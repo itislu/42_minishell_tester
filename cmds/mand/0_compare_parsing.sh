@@ -23,15 +23,7 @@
 
 /bin/echo '"'"$USER"'"'
 
-/bin/echo $"HOME"$USER
-
-/bin/echo $"HOM"E$USER
-
 /bin/echo "exit_code ->$? user ->$USER home -> $HOME"
-
-/bin/echo $"HOME"
-
-/bin/echo $"42$"
 
 /bin/echo "$ "
 

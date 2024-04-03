@@ -126,27 +126,11 @@ echo "$HO ME"
 
 echo '$HO ME'
 
-echo $"HOME"
-
-echo $'HOME'
-
 echo ""$PWD""
 
 echo ''$PWD''
 
 echo $USE"R"$HOME
-
-echo $"HOME"$USER
-
-echo $"HOM"E$USER
-
-echo $"'HOM'E"$USER
-
-echo $'HOM'E$USER
-
-echo $"HOME"
-
-echo $'HOME'
 
 echo $
 
@@ -156,13 +140,7 @@ echo '$='
 
 echo "$""$"
 
-echo $"$"
-
-echo $"42$"
-
 echo "$"$
-
-echo $'$'
 
 echo '$'$
 

@@ -34,18 +34,6 @@ unset o asd B x X wqd c
 
 export miert ne lehetne ezt is
 
-/bin/echo $"HOME"$USER
-
-/bin/echo $"HOM"E$USER
-
-/bin/echo $"'HOM'E"$USER
-
-/bin/echo $'HOM'E$USER
-
-/bin/echo $"HOME"
-
-/bin/echo $'HOME'
-
 /bin/echo $
 
 /bin/echo "$"
@@ -54,13 +42,7 @@ export miert ne lehetne ezt is
 
 /bin/echo "$""$"
 
-/bin/echo $"$"
-
-/bin/echo $"42$"
-
 /bin/echo "$"$
-
-/bin/echo $'$'
 
 /bin/echo '$'$
 

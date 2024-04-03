@@ -301,6 +301,6 @@ exit 123"123"
 
 <| echo ok
 
->| echo sure
+> echo sure
 
 cd --

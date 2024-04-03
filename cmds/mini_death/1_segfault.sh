@@ -1,6 +1,6 @@
 echo |< echo segf
 
-echo segf >| echo is this invalid
+echo segf > echo is this invalid
 
 echo >          >           < "echo"
 

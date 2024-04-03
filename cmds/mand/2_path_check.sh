@@ -27,9 +27,9 @@ cd -
 
 cd .
 
-cd ~
+cd $HOME
 
-cd ~/Desktop/
+cd $HOME/Desktop/
 pwd
 
 export PATH=

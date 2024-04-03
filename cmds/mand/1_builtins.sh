@@ -4,7 +4,7 @@
 
 ### ECHO ###
 
-echo cd ~
+echo cd $HOME
 
 echo "cd ~"
 
@@ -287,7 +287,7 @@ cd $OLDPWD/something
 pwd
 
 pwd
-cd ~
+cd $HOME
 cd - ananas dot jpeg
 pwd
 
@@ -297,11 +297,11 @@ cd includes/ djhwbdhwbd wgdyuhgw jdwjdh wuiydjwh
 pwd
 
 pwd
-cd ~ asd w dd q asd
+cd $HOME asd w dd q asd
 pwd
 
 pwd
-cd ~
+cd $HOME
 cd -
 pwd
 
@@ -310,7 +310,7 @@ cd -
 pwd
 
 pwd
-cd ~
+cd $HOME
 pwd
 
 # might need to change the directory by yourself, that supposed to be valid =)

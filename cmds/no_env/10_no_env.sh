@@ -39,7 +39,7 @@ cd -
 pwd
 
 cd
-cd ~
+cd $HOME
 
 /bin/ls
 
@@ -83,12 +83,12 @@ exit
 
 unset PATH
 pwd
-cd ~
+cd $HOME
 pwd
 
 unset PATH
 pwd
-cd ~
+cd $HOME
 pwd
 cd -
 pwd

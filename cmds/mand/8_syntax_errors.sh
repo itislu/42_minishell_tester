@@ -103,6 +103,4 @@ echo ">>| echo wtf"
 
 echo "<| echo wtf"
 
-<>
-
 < >

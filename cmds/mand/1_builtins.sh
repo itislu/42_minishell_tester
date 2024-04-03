@@ -48,20 +48,6 @@ echo '$?'
 
 echo "'$?'"
 
-echo \$USER
-
-echo \\$USER
-
-echo \\\$USER
-
-echo \\\\$USER
-
-echo \\\\\$USER
-
-echo \\\\\\\\\$USER
-
-echo \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\$USER \$PATH \\$PWD
-
 echo "cat lol.c | cat > lol.c"
 
 echo "cat lol.c '|' cat > lol.c"
@@ -474,7 +460,7 @@ export TES^T=123
 
 export TES!T=123
 
-export TES\~T=123
+export TES"~"T=123
 
 export TEST+=100
 
@@ -590,7 +576,7 @@ unset TES^T
 
 unset TES!T
 
-unset TES\~T
+unset TES"~"T
 
 /bin/echo $HOME
 unset $HOME

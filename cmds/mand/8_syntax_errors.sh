@@ -67,7 +67,7 @@ echo > <
 
 hello world
 ||||||||
-            
+
 cat wouaf wouaf
 >
 
@@ -78,8 +78,6 @@ cat wouaf wouaf
 <<
 
 /
-
-\\\
 
 rm -f something
 

@@ -5,7 +5,7 @@ export MINISHELL_PATH=./
 export EXECUTABLE=minishell
 RUNDIR=$HOME/42_minishell_tester
 TMP_OUTDIR=/tmp/minishell_tester
-VALGRIND_OUTDIR=$MINISHELL_PATH/valgrind_output
+OUTDIR=$MINISHELL_PATH/tester_output
 
 NL=$'\n'
 TAB=$'\t'
@@ -187,6 +187,8 @@ test_from_file() {
 	i=1
 	end_of_file=0
 	line_count=0
+	dir_name=$(basename $(dirname $1))
+	file_name=$(basename --suffix=.sh $1)
 	while [[ $end_of_file == 0 ]] ;
 	do
 		read -r line
@@ -220,6 +222,9 @@ test_from_file() {
 				echo -ne "❌  " | tr '\n' ' '
 				((TEST_KO_OUT++))
 				((FAILED++))
+				mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null
+				mv "$TMP_OUTDIR/tmp_out_minishell" "$OUTDIR/$dir_name/$file_name/stdout_minishell_$i" 2>/dev/null
+				mv "$TMP_OUTDIR/tmp_out_bash" "$OUTDIR/$dir_name/$file_name/stdout_bash_$i" 2>/dev/null
 			else
 				echo -ne "✅  "
 				((TEST_OK++))
@@ -231,6 +236,9 @@ test_from_file() {
 				echo -ne "❌  " |  tr '\n' ' '
 				((TEST_KO_ERR++))
 				((FAILED++))
+				mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null
+				mv "$TMP_OUTDIR/tmp_err_minishell" "$OUTDIR/$dir_name/$file_name/stderr_minishell_$i" 2>/dev/null
+				mv "$TMP_OUTDIR/tmp_err_bash" "$OUTDIR/$dir_name/$file_name/stderr_bash_$i" 2>/dev/null
 			else
 				echo -ne "✅  "
 				((TEST_OK++))
@@ -263,16 +271,6 @@ test_from_file() {
 				THREE=0
 			fi
 		fi
-		# echo
-		# echo -n "minishell stdout: " ; echo -n "|" ; cat "$TMP_OUTDIR/tmp_out_minishell" | nl -ba | awk '{print "m: " $0}' ; echo -n "|"
-		# echo
-		# echo -n "bash stdout:      " ; echo -n "|" ; cat "$TMP_OUTDIR/tmp_out_bash" | nl -ba | awk '{print "b: " $0}' ; echo -n "|"
-		# echo
-		# echo
-		# echo -n "minishell stderr: " ; echo -n "|" ; cat "$TMP_OUTDIR/tmp_err_minishell" | nl -ba | awk '{print "m: " $0}' ; echo -n "|"
-		# echo
-		# echo -n "bash stderr:      " ; echo -n "|" ; cat "$TMP_OUTDIR/tmp_err_bash" | nl -ba | awk '{print "b: " $0}' ; echo -n "|"
-		# echo
 	done < "$1"
 }
 
@@ -398,8 +396,8 @@ test_leaks() {
 			then
 				echo -ne "❌ "
 				((LEAKS++))
-				mkdir -p "$VALGRIND_OUTDIR/$dir_name/$file_name" 2>/dev/null
-				mv "$TMP_OUTDIR/tmp_valgrind_out" "$VALGRIND_OUTDIR/$dir_name/$file_name/valgrind_out_$i" 2>/dev/null
+				mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null
+				mv "$TMP_OUTDIR/tmp_valgrind_out" "$OUTDIR/$dir_name/$file_name/valgrind_out_$i" 2>/dev/null
 			else
 				echo -ne "✅ "
 			fi
@@ -421,7 +419,7 @@ test_leaks() {
 		fi
 	done < "$1"
 	rm -f "$TMP_OUTDIR/tmp_valgrind_out"
-	find "$VALGRIND_OUTDIR" -type d -empty -delete 2>/dev/null
+	find "$OUTDIR" -type d -empty -delete 2>/dev/null
 }
 
 test_without_env() {
@@ -429,6 +427,8 @@ test_without_env() {
 	i=1
 	end_of_file=0
 	line_count=0
+	dir_name=$(basename $(dirname $1))
+	file_name=$(basename --suffix=.sh $1)
 	while [[ $end_of_file == 0 ]] ;
 	do
 		read -r line
@@ -462,6 +462,9 @@ test_without_env() {
 				echo -ne "❌  " | tr '\n' ' '
 				((TEST_KO_OUT++))
 				((FAILED++))
+				mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null
+				mv "$TMP_OUTDIR/tmp_out_minishell" "$OUTDIR/$dir_name/$file_name/stdout_minishell_$i" 2>/dev/null
+				mv "$TMP_OUTDIR/tmp_out_bash" "$OUTDIR/$dir_name/$file_name/stdout_bash_$i" 2>/dev/null
 			else
 				echo -ne "✅  "
 				((TEST_OK++))
@@ -473,6 +476,9 @@ test_without_env() {
 				echo -ne "❌  " |  tr '\n' ' '
 				((TEST_KO_ERR++))
 				((FAILED++))
+				mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null
+				mv "$TMP_OUTDIR/tmp_err_minishell" "$OUTDIR/$dir_name/$file_name/stderr_minishell_$i" 2>/dev/null
+				mv "$TMP_OUTDIR/tmp_err_bash" "$OUTDIR/$dir_name/$file_name/stderr_bash_$i" 2>/dev/null
 			else
 				echo -ne "✅  "
 				((TEST_OK++))

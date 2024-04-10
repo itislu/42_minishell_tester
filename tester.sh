@@ -399,7 +399,7 @@ test_leaks() {
 				echo -ne "❌ "
 				((LEAKS++))
 				mkdir -p "$VALGRIND_OUTDIR/$dir_name/$file_name" 2>/dev/null
-				cat "$TMP_OUTDIR/tmp_valgrind-out.txt" > "$VALGRIND_OUTDIR/$dir_name/$file_name/test_$i.txt" 2>/dev/null
+				mv "$TMP_OUTDIR/tmp_valgrind-out.txt" "$VALGRIND_OUTDIR/$dir_name/$file_name/test_$i.txt" 2>/dev/null
 			else
 				echo -ne "✅ "
 			fi

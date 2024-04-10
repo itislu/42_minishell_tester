@@ -210,12 +210,12 @@ test_from_file() {
 				((line_count++))
 			done
 			# INPUT=${INPUT%?}
-			echo -n "$INPUT" | $MINISHELL_PATH/$EXECUTABLE 2>"$TMP_OUTDIR"/tmp_err_minishell >"$TMP_OUTDIR"/tmp_out_minishell
+			echo -n "$INPUT" | $MINISHELL_PATH/$EXECUTABLE 2>"$TMP_OUTDIR/tmp_err_minishell" >"$TMP_OUTDIR/tmp_out_minishell"
 			exit_minishell=$?
-			echo -n "enable -n .$NL$INPUT" | bash --posix 2>"$TMP_OUTDIR"/tmp_err_bash >"$TMP_OUTDIR"/tmp_out_bash
+			echo -n "enable -n .$NL$INPUT" | bash --posix 2>"$TMP_OUTDIR/tmp_err_bash" >"$TMP_OUTDIR/tmp_out_bash"
 			exit_bash=$?
 			echo -ne "\033[1;34mSTD_OUT:\033[m "
-			if ! diff -q "$TMP_OUTDIR"/tmp_out_minishell "$TMP_OUTDIR"/tmp_out_bash >/dev/null ;
+			if ! diff -q "$TMP_OUTDIR/tmp_out_minishell" "$TMP_OUTDIR/tmp_out_bash" >/dev/null ;
 			then
 				echo -ne "❌  " | tr '\n' ' '
 				((TEST_KO_OUT++))
@@ -264,14 +264,14 @@ test_from_file() {
 			fi
 		fi
 		# echo
-		# echo -n "minishell stdout: " ; echo -n "|" ; cat "$TMP_OUTDIR"/tmp_out_minishell | nl -ba | awk '{print "m: " $0}' ; echo -n "|"
+		# echo -n "minishell stdout: " ; echo -n "|" ; cat "$TMP_OUTDIR/tmp_out_minishell" | nl -ba | awk '{print "m: " $0}' ; echo -n "|"
 		# echo
-		# echo -n "bash stdout:      " ; echo -n "|" ; cat "$TMP_OUTDIR"/tmp_out_bash | nl -ba | awk '{print "b: " $0}' ; echo -n "|"
+		# echo -n "bash stdout:      " ; echo -n "|" ; cat "$TMP_OUTDIR/tmp_out_bash" | nl -ba | awk '{print "b: " $0}' ; echo -n "|"
 		# echo
 		# echo
-		# echo -n "minishell stderr: " ; echo -n "|" ; cat "$TMP_OUTDIR"/tmp_err_minishell | nl -ba | awk '{print "m: " $0}' ; echo -n "|"
+		# echo -n "minishell stderr: " ; echo -n "|" ; cat "$TMP_OUTDIR/tmp_err_minishell" | nl -ba | awk '{print "m: " $0}' ; echo -n "|"
 		# echo
-		# echo -n "bash stderr:      " ; echo -n "|" ; cat "$TMP_OUTDIR"/tmp_err_bash | nl -ba | awk '{print "b: " $0}' ; echo -n "|"
+		# echo -n "bash stderr:      " ; echo -n "|" ; cat "$TMP_OUTDIR/tmp_err_bash" | nl -ba | awk '{print "b: " $0}' ; echo -n "|"
 		# echo
 	done < "$1"
 }
@@ -289,7 +289,7 @@ test_leaks() {
 	--trace-children-skip=$(echo "$valgrind_ignore_abs_path" $(which "$valgrind_ignore_rel_path") | tr ' ' ',')
 	--track-fds=yes	# Change to --track-fds=all later
 	--track-origins=yes
-	--log-file="$TMP_OUTDIR"/tmp_valgrind-out.txt)
+	--log-file="$TMP_OUTDIR/tmp_valgrind-out.txt")
 	IFS=''
 	i=1
 	end_of_file=0
@@ -319,12 +319,12 @@ test_leaks() {
 				((line_count++))
 			done
 			# INPUT=${INPUT%?}
-			echo -n "$INPUT" | $MINISHELL_PATH/$EXECUTABLE 2>"$TMP_OUTDIR"/tmp_err_minishell >"$TMP_OUTDIR"/tmp_out_minishell
+			echo -n "$INPUT" | $MINISHELL_PATH/$EXECUTABLE 2>"$TMP_OUTDIR/tmp_err_minishell" >"$TMP_OUTDIR/tmp_out_minishell"
 			exit_minishell=$?
-			echo -n "enable -n .$NL$INPUT" | bash --posix 2>"$TMP_OUTDIR"/tmp_err_bash >"$TMP_OUTDIR"/tmp_out_bash
+			echo -n "enable -n .$NL$INPUT" | bash --posix 2>"$TMP_OUTDIR/tmp_err_bash" >"$TMP_OUTDIR/tmp_out_bash"
 			exit_bash=$?
 			echo -ne "\033[1;34mSTD_OUT:\033[m "
-			if ! diff -q "$TMP_OUTDIR"/tmp_out_minishell "$TMP_OUTDIR"/tmp_out_bash >/dev/null ;
+			if ! diff -q "$TMP_OUTDIR/tmp_out_minishell" "$TMP_OUTDIR/tmp_out_bash" >/dev/null ;
 			then
 				echo -ne "❌  " | tr '\n' ' '
 				((TEST_KO_OUT++))
@@ -359,7 +359,7 @@ test_leaks() {
 			echo -ne "\033[1;36mLEAKS:\033[m "
 			echo -n "$INPUT" | eval "valgrind ${valgrind_flags[@]} $MINISHELL_PATH/$EXECUTABLE" 2>/dev/null >/dev/null
 			# Get all error summaries
-			error_summaries=$(cat "$TMP_OUTDIR"/tmp_valgrind-out.txt | grep -a "ERROR SUMMARY:" | awk '{print $4}')
+			error_summaries=$(cat "$TMP_OUTDIR/tmp_valgrind-out.txt" | grep -a "ERROR SUMMARY:" | awk '{print $4}')
 			IFS=$'\n' read -rd '' -a error_summaries_array <<<"$error_summaries"
 			# Check if any error summary is not 0
 			leak_found=0
@@ -388,7 +388,7 @@ test_leaks() {
 							print line
 						}
 					}
-				' "$TMP_OUTDIR"/tmp_valgrind-out.txt
+				' "$TMP_OUTDIR/tmp_valgrind-out.txt"
 			)
 			if [ -n "$open_file_descriptors" ]
 			then
@@ -399,7 +399,7 @@ test_leaks() {
 				echo -ne "❌ "
 				((LEAKS++))
 				mkdir -p "$VALGRIND_OUTDIR/$dir_name/$file_name" 2>/dev/null
-				cat "$TMP_OUTDIR"/tmp_valgrind-out.txt > "$VALGRIND_OUTDIR/$dir_name/$file_name/test_$i.txt" 2>/dev/null
+				cat "$TMP_OUTDIR/tmp_valgrind-out.txt" > "$VALGRIND_OUTDIR/$dir_name/$file_name/test_$i.txt" 2>/dev/null
 			else
 				echo -ne "✅ "
 			fi
@@ -420,7 +420,7 @@ test_leaks() {
 			fi
 		fi
 	done < "$1"
-	rm -f "$TMP_OUTDIR"/tmp_valgrind-out.txt
+	rm -f "$TMP_OUTDIR/tmp_valgrind-out.txt"
 	find "$VALGRIND_OUTDIR" -type d -empty -delete 2>/dev/null
 }
 
@@ -452,12 +452,12 @@ test_without_env() {
 				((line_count++))
 			done
 			# INPUT=${INPUT%?}
-			echo -n "$INPUT" | env -i $MINISHELL_PATH/$EXECUTABLE 2>"$TMP_OUTDIR"/tmp_err_minishell >"$TMP_OUTDIR"/tmp_out_minishell
+			echo -n "$INPUT" | env -i $MINISHELL_PATH/$EXECUTABLE 2>"$TMP_OUTDIR/tmp_err_minishell" >"$TMP_OUTDIR/tmp_out_minishell"
 			exit_minishell=$?
-			echo -n "enable -n .$NL$INPUT" | env -i bash --posix 2>"$TMP_OUTDIR"/tmp_err_bash >"$TMP_OUTDIR"/tmp_out_bash
+			echo -n "enable -n .$NL$INPUT" | env -i bash --posix 2>"$TMP_OUTDIR/tmp_err_bash" >"$TMP_OUTDIR/tmp_out_bash"
 			exit_bash=$?
 			echo -ne "\033[1;34mSTD_OUT:\033[m "
-			if ! diff -q "$TMP_OUTDIR"/tmp_out_minishell "$TMP_OUTDIR"/tmp_out_bash >/dev/null ;
+			if ! diff -q "$TMP_OUTDIR/tmp_out_minishell" "$TMP_OUTDIR/tmp_out_bash" >/dev/null ;
 			then
 				echo -ne "❌  " | tr '\n' ' '
 				((TEST_KO_OUT++))

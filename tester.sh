@@ -163,7 +163,7 @@ print_stats() {
 	else
 		echo -ne "\033[1;31m$TEST_KO_OUT\033[m  "
 	fi
-	echo -ne "\033[1;36mSTD_ERR:\033[m "
+	echo -ne "\033[1;33mSTD_ERR:\033[m "
 	if [[ $TEST_KO_ERR == 0 ]] ; then
 		echo -ne "\033[1;32m✓ \033[m  "
 	else
@@ -332,7 +332,7 @@ test_leaks() {
 				((TEST_OK++))
 				((ONE++))
 			fi
-			echo -ne "\033[1;36mSTD_ERR:\033[m "
+			echo -ne "\033[1;33mSTD_ERR:\033[m "
 			if [[ -s $TMP_OUTDIR/tmp_err_minishell && ! -s $TMP_OUTDIR/tmp_err_bash ]] || [[ ! -s $TMP_OUTDIR/tmp_err_minishell && -s $TMP_OUTDIR/tmp_err_bash ]] ;
 			then
 				echo -ne "❌  " |  tr '\n' ' '
@@ -470,7 +470,7 @@ test_without_env() {
 				((TEST_OK++))
 				((ONE++))
 			fi
-			echo -ne "\033[1;36mSTD_ERR:\033[m "
+			echo -ne "\033[1;33mSTD_ERR:\033[m "
 			if [[ -s $TMP_OUTDIR/tmp_err_minishell && ! -s $TMP_OUTDIR/tmp_err_bash ]] || [[ ! -s $TMP_OUTDIR/tmp_err_minishell && -s $TMP_OUTDIR/tmp_err_bash ]] ;
 			then
 				echo -ne "❌  " |  tr '\n' ' '

@@ -94,7 +94,7 @@ echo segfault <"    <   <   <"  <   <   amazing
 .
 amazing
 
-echo seg <> echo seg
+echo seg <>> echo seg
 
 echo seg >< echo segf
 

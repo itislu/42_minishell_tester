@@ -88,7 +88,10 @@ main() {
 	rm -rf test
 	rm -rf "$TMP_OUTDIR" 2>/dev/null
 
-	echo "$GH_BRANCH=$FAILED" >> "$GITHUB_ENV"
+	if [ "$GITHUB_ACTIONS" == "true" ] ; then
+		echo "$GH_BRANCH=$FAILED" >> "$GITHUB_ENV"
+	fi
+
 	if [[ $LEAKS -ne 0 ]] ; then
 		exit 1
 	else

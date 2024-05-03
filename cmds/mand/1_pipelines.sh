@@ -174,3 +174,5 @@ pwd
 /bin/rm -f out
 
 ls -l | awk '$1 ~ /^d/ {print $9}'
+
+aaa | bbb | aaa | bbb | aaa | bbb | aaa | bbb | aaa | bbb | aaa | bbb | aaa | bbb | aaa | bbb | aaa | bbb | aaa | bbb | aaa | bbb | aaa | bbb | aaa | bbb | aaa | bbb | aaa | bbb | aaa | bbb | aaa | bbb | aaa | bbb | aaa | bbb | aaa | bbb | aaa | bbb | aaa | bbb | aaa | bbb | aaa | bbb | aaa | bbb | aaa | bbb | aaa | bbb | aaa | bbb

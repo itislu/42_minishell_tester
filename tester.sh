@@ -234,7 +234,8 @@ test_from_file() {
 				((ONE++))
 			fi
 			echo -ne "\033[1;33mSTD_ERR:\033[m "
-			if [[ -s $TMP_OUTDIR/tmp_err_minishell && ! -s $TMP_OUTDIR/tmp_err_bash ]] || [[ ! -s $TMP_OUTDIR/tmp_err_minishell && -s $TMP_OUTDIR/tmp_err_bash ]] ;
+			# Filter out the "crash" prefix from minishell error messages and the "bash: line X" prefix from bash error messages
+			if ! diff -q <(sed 's/^crash[^:]*//' $TMP_OUTDIR/tmp_err_minishell) <(sed 's/^bash: [^:]*//' $TMP_OUTDIR/tmp_err_bash) >/dev/null ;
 			then
 				echo -ne "❌  " |  tr '\n' ' '
 				((TEST_KO_ERR++))

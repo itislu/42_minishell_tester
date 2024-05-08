@@ -296,7 +296,7 @@ test_leaks() {
 	--suppressions="$MINISHELL_PATH"/minishell.supp
 	--trace-children=yes
 	--trace-children-skip=$(echo "$valgrind_ignore_abs_path" $(which "$valgrind_ignore_rel_path") | tr ' ' ',')
-	--track-fds=yes	# Change to --track-fds=all later
+	--track-fds=all
 	--track-origins=yes
 	--log-file="$TMP_OUTDIR/tmp_valgrind_out")
 	IFS=''

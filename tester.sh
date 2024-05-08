@@ -234,7 +234,15 @@ test_from_file() {
 				((ONE++))
 			fi
 			echo -ne "\033[1;33mSTD_ERR:\033[m "
-			if [[ -s $TMP_OUTDIR/tmp_err_minishell && ! -s $TMP_OUTDIR/tmp_err_bash ]] || [[ ! -s $TMP_OUTDIR/tmp_err_minishell && -s $TMP_OUTDIR/tmp_err_bash ]] ;
+			# Filter out program name prefix before first colon from minishell error messages and "bash: line X" prefix from bash error messages
+			stderr_minishell=$(cat "$TMP_OUTDIR/tmp_err_minishell")
+			stderr_bash=$(cat "$TMP_OUTDIR/tmp_err_bash")
+			if [[ $stderr_bash == bash:* ]] ;
+			then
+				stderr_bash=$(echo "$stderr_bash" | sed 's/^bash: line[^:]*//')
+				stderr_minishell=$(echo "$stderr_minishell" | sed 's/^[^:]*//')
+			fi
+			if ! diff -q <(echo "$stderr_minishell") <(echo "$stderr_bash") >/dev/null ;
 			then
 				echo -ne "❌  " |  tr '\n' ' '
 				((TEST_KO_ERR++))

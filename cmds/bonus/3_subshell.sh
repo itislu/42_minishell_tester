@@ -49,3 +49,7 @@ cat file2
 rm file1 file2
 
 (echo hi && (echo hi && (echo hi) && echo hi))
+
+echo 1 | (sleep 1 && echo 2 && sleep 5) | < Makefile
+
+echo 1 | (sleep 1 && (echo 2 | echo 3) && sleep 5) | < Makefile

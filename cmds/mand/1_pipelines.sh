@@ -142,9 +142,11 @@ ls|cat Makefile|ls
 ls|cat Makefile|<wc -l
 
 ls|cat Makefile|> out
+cat out
 /bin/rm -f out
 
 ls|cat Makefile|>> out
+cat out
 /bin/rm -f out
 
 

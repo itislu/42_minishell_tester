@@ -12,9 +12,9 @@
 
 "    "
 
-/bin/echo 		42
+"		"
 
-echo 			42
+"			"
 
 /bin/echo hello 42
 

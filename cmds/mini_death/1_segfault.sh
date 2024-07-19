@@ -131,3 +131,17 @@ EcHO -nnnn
 
 unset $PATH
 echo -nnnnnnnn
+
+ls | cat << stop | ls -la | cat << stop1 | ls | cat << stop2 | ls -la > > out | cat << stop3
+fe
+wf
+fwe
+f
+stop
+dw
+stop1
+dwasd
+stop2
+cat Makefile | ls > out
+cat out
+/bin/rm -f out

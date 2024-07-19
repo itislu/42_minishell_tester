@@ -243,7 +243,7 @@ test_from_file() {
 			stderr_bash=$(cat "$TMP_OUTDIR/tmp_err_bash")
 			if grep -q '^bash: line [0-9]*:' <<< "$stderr_bash" ;
 			then
-				stderr_bash=$(sed 's/^bash: line [0-9]*:/:/' <<< "$stderr_bash")
+				stderr_bash=$(sed 's/^bash: line [0-9]*:/:/' <<< "$stderr_bash" | sed '/^: syntax error near unexpected token/{n; d}')
 				stderr_minishell=$(sed "s/^\\($MINISHELL_NAME: line [0-9]*:\\|$MINISHELL_NAME:\\)/:/" <<< "$stderr_minishell")
 			fi
 			if ! diff -q <(echo "$stderr_minishell") <(echo "$stderr_bash") >/dev/null ;

@@ -7,6 +7,10 @@ RUNDIR=$HOME/42_minishell_tester
 TMP_OUTDIR=/tmp/minishell_tester
 OUTDIR=$MINISHELL_PATH/tester_output
 
+# Get the name of the minishell by running a command that produces an error
+# The name will then be filtered out from error messages
+MINISHELL_NAME=$(echo -n "forcing_error_message" | $MINISHELL_PATH/$EXECUTABLE 2>&1 | head -n 1 | awk -F: '{if ($0 ~ /:/) print $1; else print ""}')
+
 NL=$'\n'
 TAB=$'\t'
 
@@ -237,10 +241,10 @@ test_from_file() {
 			# Filter out program name prefix before first colon from minishell error messages and "bash: line X" prefix from bash error messages
 			stderr_minishell=$(cat "$TMP_OUTDIR/tmp_err_minishell")
 			stderr_bash=$(cat "$TMP_OUTDIR/tmp_err_bash")
-			if [[ $stderr_bash == bash:* ]] ;
+			if grep -q '^bash: line [0-9]*:' <<< "$stderr_bash" ;
 			then
-				stderr_bash=$(echo "$stderr_bash" | sed 's/^bash: line[^:]*//')
-				stderr_minishell=$(echo "$stderr_minishell" | sed 's/^[^:]*//')
+				stderr_bash=$(sed 's/^bash: line [0-9]*:/:/' <<< "$stderr_bash")
+				stderr_minishell=$(sed "s/^\\($MINISHELL_NAME: line [0-9]*:\\|$MINISHELL_NAME:\\)/:/" <<< "$stderr_minishell")
 			fi
 			if ! diff -q <(echo "$stderr_minishell") <(echo "$stderr_bash") >/dev/null ;
 			then

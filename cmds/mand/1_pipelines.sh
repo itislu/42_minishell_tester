@@ -93,7 +93,7 @@ as $HOME
 stop3
 /bin/rm -f out
 
-ls | cat << stop | ls -la | cat << stop1 | ls | cat << stop2 | ls -la > > out | cat << stop3
+ls | cat << stop | ls -la | cat << stop1 | ls | cat << stop2 | ls -la >> out | cat << stop3
 fe
 wf
 fwe

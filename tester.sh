@@ -248,7 +248,7 @@ test_from_file() {
 			fi
 			if ! diff -q <(echo "$stderr_minishell") <(echo "$stderr_bash") >/dev/null ;
 			then
-				echo -ne "❌  " |  tr '\n' ' '
+				echo -ne "❌  " | tr '\n' ' '
 				((TEST_KO_ERR++))
 				((FAILED++))
 				mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null
@@ -350,7 +350,7 @@ test_leaks() {
 			echo -ne "\033[1;33mSTD_ERR:\033[m "
 			if [[ -s $TMP_OUTDIR/tmp_err_minishell && ! -s $TMP_OUTDIR/tmp_err_bash ]] || [[ ! -s $TMP_OUTDIR/tmp_err_minishell && -s $TMP_OUTDIR/tmp_err_bash ]] ;
 			then
-				echo -ne "❌  " |  tr '\n' ' '
+				echo -ne "❌  " | tr '\n' ' '
 				((TEST_KO_ERR++))
 				((FAILED++))
 			else
@@ -488,7 +488,7 @@ test_without_env() {
 			echo -ne "\033[1;33mSTD_ERR:\033[m "
 			if [[ -s $TMP_OUTDIR/tmp_err_minishell && ! -s $TMP_OUTDIR/tmp_err_bash ]] || [[ ! -s $TMP_OUTDIR/tmp_err_minishell && -s $TMP_OUTDIR/tmp_err_bash ]] ;
 			then
-				echo -ne "❌  " |  tr '\n' ' '
+				echo -ne "❌  " | tr '\n' ' '
 				((TEST_KO_ERR++))
 				((FAILED++))
 				mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null

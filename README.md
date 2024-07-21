@@ -1,7 +1,19 @@
-
 <h1 align=center>📖 42_minishell_tester</h1>
 <h2 align="center">Forked from <a href="https://github.com/zstenger93">zstenger93</a>'s <a href="https://github.com/zstenger93/42_minishell_tester">original tester</a> by <a href="https://github.com/LeaYeh">LeaYeh</a> and <a href="https://github.com/itislu">itislu</a> from 42 Vienna</h2>
 <img align=center src="https://github.com/LeaYeh/42_minishell_tester/blob/master/tester.png">
+
+# Updates
+
+- More rigorous memory leak checks.
+- Memory leak checks in child processes without false positives from external commands.
+- File descriptor leak checks.
+- Smart stderror comparison with bash.
+- Output failed test case and valgrind results to files.
+- Updated test cases for updated subject (v7.1).
+- Subshell test cases.
+- Compatibility and tester speed-up with GitHub Actions.
+
+---
 
 # Menu
 
@@ -10,8 +22,6 @@
 [Install & Run](#how-to-install-and-run)
 
 [Usage](#how-to-launch-the-tester)
-
-[Updates](#updates)
 
 [CI with GitHub Actions](#continuous-integration-with-github-actions)
 
@@ -129,19 +139,6 @@ mstest -h  # Display the usage instructions
 
 ---
 
-# Updates
-
-- More rigorous memory leak checks.
-- Memory leak checks in child processes without false positives from external commands.
-- File descriptor leak checks.
-- Smart stderror comparison with bash.
-- Output failed test case and valgrind results to files.
-- Updated test cases for updated subject (v7.1).
-- Subshell test cases.
-- Compatibility and tester speed-up with GitHub Actions.
-
----
-
 # Continuous Integration with GitHub Actions
 
 [How to Re-use Our CI/CD Framework For Your Own Minishell](https://github.com/LeaYeh/minishell?tab=readme-ov-file#how-to-re-use-our-cicd-framework-for-your-own-minishell)
@@ -192,5 +189,5 @@ Extra bonus tests by: [Mouad](https://github.com/moabid42)
 and
 
 ```
-Our love for minishell
+Our passion for minishell
 ```

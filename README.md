@@ -1,16 +1,14 @@
 
 <h1 align=center>📖 42_minishell_tester</h1>
-<img align=center src="https://github.com/zstenger93/42_minishell_tester/blob/master/tester.png">
+<img align=center src="https://github.com/LeaYeh/42_minishell_tester/blob/master/tester.png">
 
 # Menu
 
 [Setup](#setup)
 
-[Usage](#how-to-launch-the-tester)
-
-[Options](#options)
-
 [Install & Run](#how-to-install-and-run)
+
+[Usage](#how-to-launch-the-tester)
 
 [Updates](#updates)
 
@@ -58,36 +56,9 @@ I think from this you pretty much can figure it out, it isn't a big change :)
 
 ---
 
-# How To Launch The Tester
-Clone it to the root of your minishell
-
-cd to the testers folder
-## Options
-
-```bash
-bash tester.sh m
-```
-```bash
-bash tester.sh vm
-```
-```bash
-bash tester.sh ne
-```
-```bash
-bash tester.sh d
-```
-```bash
-bash tester.sh b
-```
-```bash
-bash tester.sh a
-```
-
----
-
 # How To Install and Run
 
-To install the script, copy and run following command:
+To install the script, copy and run the following command:
 
 ```
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/LeaYeh/42_minishell_tester/master/install.sh)"
@@ -101,6 +72,56 @@ So that you can run the program in any directory (where your minishell is) by ca
 
 ```
 mstest
+```
+
+---
+
+# How To Launch The Tester
+
+```
+mstest m  # Run mandatory tests
+```
+```
+mstest vm  # Run mandatory tests with memory leak checks
+```
+```
+mstest b  # Run bonus tests
+```
+```
+mstest vb  # Run bonus tests with memory leak checks
+```
+```
+mstest ne  # Run tests without environment
+```
+```
+mstest vne  # Run tests without environment with memory leak checks
+```
+```
+mstest d  # Run death tests
+```
+```
+mstest vd  # Run death tests with memory leak checks
+```
+```
+mstest a  # Run all tests
+```
+```
+mstest va  # Run all tests with memory leak checks
+```
+```
+mstest -l  # Enable memory leak checks for any of the above tests
+```
+```
+mstest -n  # Disable environment for any of the above tests
+```
+```
+mstest -f <file>  # Run tests specified in a file
+```
+```
+mstest --dir <directory>  # Run tests specified in a directory
+```
+```
+mstest -h  # Display the usage instructions
 ```
 
 ---

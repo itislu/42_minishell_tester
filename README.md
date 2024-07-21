@@ -1,5 +1,6 @@
 
 <h1 align=center>📖 42_minishell_tester</h1>
+<h2 align="center">Forked from <a href="https://github.com/zstenger93">zstenger93</a>'s <a href="https://github.com/zstenger93/42_minishell_tester">original tester</a> by <a href="https://github.com/LeaYeh">LeaYeh</a> and <a href="https://github.com/itislu">itislu</a> from 42 Vienna</h2>
 <img align=center src="https://github.com/LeaYeh/42_minishell_tester/blob/master/tester.png">
 
 # Menu
@@ -12,9 +13,11 @@
 
 [Updates](#updates)
 
+[CI with GitHub Actions](#continuous-integration-with-github-actions)
+
 [Disclaimer](#disclaimer)
 
-[Contributors](#the-people-made-this-tester-possible)
+[Contributors](#the-people-who-made-this-tester-possible)
 
 ---
 
@@ -76,7 +79,7 @@ mstest
 
 ---
 
-# How To Launch The Tester
+# How To Launch the Tester
 
 ```
 mstest m  # Run mandatory tests
@@ -127,17 +130,21 @@ mstest -h  # Display the usage instructions
 ---
 
 # Updates
-Tests without environment now are updated, separated and can be run with:
 
-```bash
-bash tester.sh ne
-```
+- More rigorous memory leak checks.
+- Memory leak checks in child processes without false positives from external commands.
+- File descriptor leak checks.
+- Smart stderror comparison with bash.
+- Output failed test case and valgrind results to files.
+- Updated test cases for updated subject (v7.1).
+- Subshell test cases.
+- Compatibility and tester speed-up with GitHub Actions.
 
-Now they should be working better, still don't trust it 100% and do test yourself as well to understand.
-It's a bit tricky to do test's well in this case because if you run `env -i bash` it disables only partially.
-It will still have most things, but if you do `unset PATH` afterwards, will see the difference.
-Also this part is pretty much what you aren't required to handle.
-The main point is to not to crash/segfault when you launch without environment.
+---
+
+# Continuous Integration with GitHub Actions
+
+[How to Re-use Our CI/CD Framework For Your Own Minishell](https://github.com/LeaYeh/minishell?tab=readme-ov-file#how-to-re-use-our-cicd-framework-for-your-own-minishell)
 
 ---
 
@@ -151,7 +158,11 @@ DO YOUR OWN TESTING. TRY TO BREAK IT! ^^
 
 HAVE FUN WITH YOUR BEAUTIFUL MINISHELL
 
-Don't trust 100% the leak check, try it yourself as well and the linked tester below
+Tests without environment are a bit tricky to do well because if you run `env -i bash` it disables only partially.
+It will still have most things, but if you do `unset PATH` afterwards, will see the difference.
+Also this part is pretty much what you aren't required to handle.
+The main point is to not to crash/segfault when you launch without environment.
+
 Try to write your own test first and don't just run a tester mindlessly
 You don't have to pass all the cases in this tester
 If you want to check leaks outside of your manual checking:
@@ -168,7 +179,7 @@ If a test just hanging in infinite loop, you can use the link to go there and co
 
 ---
 
-# The People Made This Tester Possible
+# The People Who Made This Tester Possible
 
 Base made by: [Tim](https://github.com/tjensen42) & [Hepple](https://github.com/hepple42)
 
@@ -181,13 +192,5 @@ Extra bonus tests by: [Mouad](https://github.com/moabid42)
 and
 
 ```
-My minishell pain
+Our love for minishell
 ```
----
-
-Later on I might make changes so you can run test for each part like cd, echo, pipes, redirs etc.. as well
-Or if someone takes on the challenge, you are welcome to do so.
-
-Feel free to ask on slack if you have a question
-Or open a pull request if you would like to add more tests
-Looking for people who would like to add more tests to the bonus part, because we haven't done it

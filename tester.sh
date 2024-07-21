@@ -11,6 +11,20 @@ OUTDIR=$MINISHELL_PATH/tester_output
 # The name will then be filtered out from error messages
 MINISHELL_NAME=$(echo -n "forcing_error_message" | $MINISHELL_PATH/$EXECUTABLE 2>&1 | head -n 1 | awk -F: '{if ($0 ~ /:/) print $1; else print ""}')
 
+VALGRIND_FLAGS=(
+	--errors-for-leak-kinds=all
+	--leak-check=full
+	--show-error-list=yes
+	--show-leak-kinds=all
+	--suppressions="$MINISHELL_PATH"/minishell.supp
+	--trace-children=yes
+	--trace-children-skip="$(echo /bin/* /usr/bin/* /usr/sbin/* $(which norminette) | tr ' ' ',')"
+	--track-fds=all
+	--track-origins=yes
+	--log-file="$TMP_OUTDIR/tmp_valgrind_out"
+	)
+VALGRIND="valgrind ${VALGRIND_FLAGS[*]}"
+
 NL=$'\n'
 TAB=$'\t'
 
@@ -27,7 +41,8 @@ GOOD_TEST=0
 LEAKS=0
 
 main() {
-	mkdir -p "$TMP_OUTDIR"
+	process_options "$@"
+
 	if [[ ! -f $MINISHELL_PATH/$EXECUTABLE ]] ; then
 		echo -e "\033[1;31m# **************************************************************************** #"
 		echo "#                            MINISHELL NOT COMPILED                            #"
@@ -38,52 +53,15 @@ main() {
 			echo -e "\033[1;31mCOMPILING FAILED\033[m" && exit 1
 		fi
 	fi
-	if [[ $1 == "m" ]] ; then
-		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		echo -e "  🚀                                \033[1;34mMANDATORY\033[m                                   🚀"
-		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		run_tests "mand" "normal"
-	elif [[ $1 == "vm" ]] ; then
-		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		echo -e "  🚀                             \033[1;34mMANDATORY_LEAKS\033[m                                🚀"
-		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		run_tests "mand" "leaks"
-	elif [[ $1 == "ne" ]] ; then
-		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		echo -e "  🚀                                 \033[1;34mNO_ENV\033[m                                     🚀"
-		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		run_tests "no_env" "no_env"
-	elif [[ $1 == "b" ]] ; then
-		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		echo -e "  🚀                                  \033[1;34mBONUS\033[m                                     🚀"
-		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		run_tests "bonus" "normal"
-	elif [[ $1 == "va" ]] ; then
-		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		echo -e "  🚀                            \033[1;34mALL_LEAKS\033[m                                       🚀"
-		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		run_tests "all" "leaks"
-	elif [[ $1 == "a" ]] ; then
-		run_tests "mand" "normal"
-		run_tests "bonus" "normal"
-	elif [[ $1 == "d" ]] ; then
-		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		echo -e "  🚀                                  \033[1;34mMINI_DEATH\033[m                                🚀"
-		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		run_tests "mini_death" "normal"
-	elif [[ $1 == "-f" ]] ; then
-		[[ ! -f $2 ]] && echo "\"$2\" FILE NOT FOUND"
-		[[ -f $2 ]] && run_tests_from_file "$2" "normal"
-	else
-		echo "usage: mstest [m,vm,ne,b,a]"
-		echo "m: mandatory tests"
-		echo "vm: mandatory tests with valgrind"
-		echo "va: all tests with valgrind"
-		echo "ne: tests without environment"
-		echo "b: bonus tests"
-		echo "a: mandatory and bonus tests"
-		echo "d: mandatory pipe segfault test (BRUTAL)"
+
+	if [[ $# -eq 0 ]]; then
+		print_usage
+		exit 0
 	fi
+
+	mkdir -p "$TMP_OUTDIR"
+	process_tests "$@"
+
 	if [[ $TEST_COUNT -gt 0 ]] ; then
 		print_stats
 	fi
@@ -101,40 +79,221 @@ main() {
 	fi
 }
 
+print_usage() {
+	echo -e "  \033[1;33m# **************************************************************************** #"
+	echo -e "  #                          USAGE: mstest [options]                             #"
+	echo -e "  # Options:                                                                     #"
+	echo -e "  #   m                      Run mandatory tests                                 #"
+	echo -e "  #   vm                     Run mandatory tests with memory leak checks         #"
+	echo -e "  #   b                      Run bonus tests                                     #"
+	echo -e "  #   vb                     Run bonus tests with memory leak checks             #"
+	echo -e "  #   ne                     Run tests w/o environment                           #"
+	echo -e "  #   vne                    Run tests w/o environment with memory leak checks   #"
+	echo -e "  #   d                      Run death tests                                     #"
+	echo -e "  #   vd                     Run death tests with memory leak checks             #"
+	echo -e "  #   a                      Run all tests                                       #"
+	echo -e "  #   va                     Run all tests with memory leak checks               #"
+	echo -e "  #   -l|--leaks             Enable memory leak checks                           #"
+	echo -e "  #   -n|--no-env            Disable environment                                 #"
+	echo -e "  #   -f|--file <file>       Run tests specified in a file                       #"
+	echo -e "  #      --dir <directory>   Run tests specified in a directory                  #"
+	echo -e "  #   -h|--help              Show this help message and exit                     #"
+	echo -e "  # **************************************************************************** #\033[m"
+}
+
+process_options() {
+	while [[ $# -gt 0 ]]; do
+		case $1 in
+			-l|--leaks)
+				TEST_LEAKS="true"
+				shift
+				;;
+			-n|--no-env)
+				NO_ENV="true"
+				shift
+				;;
+			-f|--file)
+				if [[ ! -f $2 ]]; then
+					echo "FILE NOT FOUND: \"$2\""
+					exit 1
+				fi
+				shift 2
+				;;
+			-d|--dir)
+				if [[ ! -d $2 ]]; then
+					echo "DIRECTORY NOT FOUND: \"$2\""
+					exit 1
+				fi
+				shift 2
+				;;
+			-h|--help)
+				print_usage
+				exit 0
+				;;
+			m|vm|b|vb|ne|vne|d|vd|a|va)
+				shift
+				;;
+			*)
+				echo "INVALID OPTION: $1"
+				print_usage
+				exit 1
+				;;
+		esac
+	done
+}
+
+process_tests() {
+	if [[ $TEST_LEAKS == "true" ]]; then
+		print_title "MEMORY_LEAKS" "⭐"
+	fi
+	if [[ $NO_ENV == "true" ]]; then
+		print_title "NO_ENVIRONMENT" "⭐"
+	fi
+	while [[ $# -gt 0 ]]; do
+		case $1 in
+			m)
+				dir="mand"
+				print_title "MANDATORY" "🚀"
+				run_tests "$dir" "$TEST_LEAKS" "$NO_ENV"
+				shift
+				;;
+			vm)
+				dir="mand"
+				test_leaks="true"
+				print_title "MANDATORY_LEAKS" "🚀"
+				run_tests "$dir" "$test_leaks" "$NO_ENV"
+				shift
+				;;
+			b)
+				dir="bonus"
+				print_title "BONUS" "🚀"
+				run_tests "$dir" "$TEST_LEAKS" "$NO_ENV"
+				shift
+				;;
+			vb)
+				dir="bonus"
+				test_leaks="true"
+				print_title "BONUS_LEAKS" "🚀"
+				run_tests "$dir" "$test_leaks" "$NO_ENV"
+				shift
+				;;
+			ne)
+				dir="no_env"
+				no_env="true"
+				print_title "NO_ENV" "🚀"
+				run_tests "$dir" "$TEST_LEAKS" "$no_env"
+				shift
+				;;
+			vne)
+				dir="no_env"
+				test_leaks="true"
+				no_env="true"
+				print_title "NO_ENV_LEAKS" "🚀"
+				run_tests "$dir" "$test_leaks" "$no_env"
+				shift
+				;;
+			d)
+				dir="mini_death"
+				print_title "MINI_DEATH" "🚀"
+				run_tests "$dir" "$TEST_LEAKS" "$NO_ENV"
+				shift
+				;;
+			vd)
+				dir="mini_death"
+				test_leaks="true"
+				print_title "MINI_DEATH_LEAKS" "🚀"
+				run_tests "$dir" "$test_leaks" "$NO_ENV"
+				shift
+				;;
+			a)
+				dir="all"
+				print_title "ALL" "🚀"
+				run_tests "$dir" "$TEST_LEAKS" "$NO_ENV"
+				shift
+				;;
+			va)
+				dir="all"
+				test_leaks="true"
+				print_title "ALL_LEAKS" "🚀"
+				run_tests "$dir" "$test_leaks" "$NO_ENV"
+				shift
+				;;
+			-f|--file)
+				file="$2"
+				print_title "FILE: $file" "🚀"
+				run_tests_from_file "$file" "$TEST_LEAKS" "$NO_ENV"
+				shift 2
+				;;
+			-d|--dir)
+				dir="$2"
+				print_title "DIRECTORY: $dir" "🚀"
+				run_tests_from_dir "$dir" "$TEST_LEAKS" "$NO_ENV"
+				shift 2
+				;;
+			*)
+				shift
+				;;
+		esac
+	done
+}
+
+print_title() {
+	local title="$1"
+	local s="$2"
+	local title_length=${#title}
+	local total_length=80
+	local padding_length=$(( (total_length - title_length - 4) / 2 ))
+	local padding_right_length=$((padding_length + (total_length - title_length - 4) % 2))
+	local padding_left=$(printf '%*s' "$padding_length" "")
+	local padding_right=$(printf '%*s' "$padding_right_length" "")
+
+	echo "  $s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s"
+	echo -e "  $s${padding_left}\033[1;34m$title\033[m${padding_right}$s"
+	echo "  $s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s"
+}
+
 run_tests() {
 	dir=$1
-	mode=$2
+	test_leaks=$2
+	no_env=$3
 	if [[ $dir == "all" ]]; then
 		FILES="${RUNDIR}/cmds/**/*.sh"
 	else
 		FILES="${RUNDIR}/cmds/${dir}/*"
 	fi
 	for file in $FILES; do
-		run_test "$file" "$mode"
+		run_test "$file" "$test_leaks" "$no_env"
 	done
 }
 
 run_tests_from_file() {
 	file=$1
-	mode=$2
-	run_test "$file" "$mode"
+	test_leaks=$2
+	no_env=$3
+	run_test "$file" "$test_leaks" "$no_env"
+}
+
+run_tests_from_dir() {
+	dir=$1
+	test_leaks=$2
+	no_env=$3
+	FILES="${dir}/*"
+	for file in $FILES; do
+		run_test "$file" "$test_leaks" "$no_env"
+	done
+
 }
 
 run_test() {
 	file=$1
-	mode=$2
-	valgrind_flags=(
-		--errors-for-leak-kinds=all
-		--leak-check=full
-		--show-error-list=yes
-		--show-leak-kinds=all
-		--suppressions="$MINISHELL_PATH"/minishell.supp
-		--trace-children=yes
-		--trace-children-skip="$(echo /bin/* /usr/bin/* /usr/sbin/* $(which norminette) | tr ' ' ',')"
-		--track-fds=all
-		--track-origins=yes
-		--log-file="$TMP_OUTDIR/tmp_valgrind_out"
-	)
+	test_leaks=$2
+	no_env=$3
+	if [[ $no_env == "true" ]]; then
+		env="env -i"
+	fi
+	if  [[ $test_leaks == "true" ]]; then
+		valgrind="$VALGRIND"
+	fi
 	IFS=''
 	i=1
 	end_of_file=0
@@ -159,26 +318,10 @@ run_test() {
 				end_of_file=$?
 				((line_count++))
 			done
-			case $mode in
-				"normal")
-					echo -n "$INPUT" | $MINISHELL_PATH/$EXECUTABLE 2>"$TMP_OUTDIR/tmp_err_minishell" >"$TMP_OUTDIR/tmp_out_minishell"
-					exit_minishell=$?
-					echo -n "enable -n .$NL$INPUT" | bash --posix 2>"$TMP_OUTDIR/tmp_err_bash" >"$TMP_OUTDIR/tmp_out_bash"
-					exit_bash=$?
-					;;
-				"leaks")
-					echo -n "$INPUT" | eval "valgrind ${valgrind_flags[@]} $MINISHELL_PATH/$EXECUTABLE" 2>"$TMP_OUTDIR/tmp_err_minishell" >"$TMP_OUTDIR/tmp_out_minishell"
-					exit_minishell=$?
-					echo -n "enable -n .$NL$INPUT" | bash --posix 2>"$TMP_OUTDIR/tmp_err_bash" >"$TMP_OUTDIR/tmp_out_bash"
-					exit_bash=$?
-					;;
-				"no_env")
-					echo -n "$INPUT" | env -i $MINISHELL_PATH/$EXECUTABLE 2>"$TMP_OUTDIR/tmp_err_minishell" >"$TMP_OUTDIR/tmp_out_minishell"
-					exit_minishell=$?
-					echo -n "enable -n .$NL$INPUT" | env -i bash --posix 2>"$TMP_OUTDIR/tmp_err_bash" >"$TMP_OUTDIR/tmp_out_bash"
-					exit_bash=$?
-					;;
-			esac
+			echo -n "$INPUT" | eval "$env $valgrind $MINISHELL_PATH/$EXECUTABLE" 2>"$TMP_OUTDIR/tmp_err_minishell" >"$TMP_OUTDIR/tmp_out_minishell"
+			exit_minishell=$?
+			echo -n "enable -n .$NL$INPUT" | eval "$env bash --posix" 2>"$TMP_OUTDIR/tmp_err_bash" >"$TMP_OUTDIR/tmp_out_bash"
+			exit_bash=$?
 			echo -ne "\033[1;34mSTD_OUT:\033[m "
 			if ! diff -q "$TMP_OUTDIR/tmp_out_minishell" "$TMP_OUTDIR/tmp_out_bash" >/dev/null ; then
 				echo -ne "❌  " | tr '\n' ' '
@@ -225,7 +368,7 @@ run_test() {
 				((TEST_OK++))
 				((THREE++))
 			fi
-			if [[ $mode == "leaks" ]]; then
+			if [[ $test_leaks == "true" ]]; then
 				echo -ne "\033[1;36mLEAKS:\033[m "
 				# Get all error summaries
 				error_summaries=$(cat "$TMP_OUTDIR/tmp_valgrind_out" | grep -a "ERROR SUMMARY:" | awk '{print $4}')

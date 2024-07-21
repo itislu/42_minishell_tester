@@ -11,6 +11,20 @@ OUTDIR=$MINISHELL_PATH/tester_output
 # The name will then be filtered out from error messages
 MINISHELL_NAME=$(echo -n "forcing_error_message" | $MINISHELL_PATH/$EXECUTABLE 2>&1 | head -n 1 | awk -F: '{if ($0 ~ /:/) print $1; else print ""}')
 
+VALGRIND_FLAGS=(
+	--errors-for-leak-kinds=all
+	--leak-check=full
+	--show-error-list=yes
+	--show-leak-kinds=all
+	--suppressions="$MINISHELL_PATH"/minishell.supp
+	--trace-children=yes
+	--trace-children-skip="$(echo /bin/* /usr/bin/* /usr/sbin/* $(which norminette) | tr ' ' ',')"
+	--track-fds=all
+	--track-origins=yes
+	--log-file="$TMP_OUTDIR/tmp_valgrind_out"
+	)
+VALGRIND="valgrind ${VALGRIND_FLAGS[*]}"
+
 NL=$'\n'
 TAB=$'\t'
 
@@ -27,7 +41,8 @@ GOOD_TEST=0
 LEAKS=0
 
 main() {
-	mkdir -p "$TMP_OUTDIR"
+	process_options "$@"
+
 	if [[ ! -f $MINISHELL_PATH/$EXECUTABLE ]] ; then
 		echo -e "\033[1;31m# **************************************************************************** #"
 		echo "#                            MINISHELL NOT COMPILED                            #"
@@ -38,57 +53,18 @@ main() {
 			echo -e "\033[1;31mCOMPILING FAILED\033[m" && exit 1
 		fi
 	fi
-	if [[ $1 == "m" ]] ; then
-		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		echo -e "  🚀                                \033[1;34mMANDATORY\033[m                                   🚀"
-		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		test_mandatory
-	elif [[ $1 == "vm" ]] ; then
-		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		echo -e "  🚀                             \033[1;34mMANDATORY_LEAKS\033[m                                🚀"
-		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		test_mandatory_leaks
-	elif [[ $1 == "ne" ]] ; then
-		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		echo -e "  🚀                                 \033[1;34mNO_ENV\033[m                                     🚀"
-		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		test_no_env
-	elif [[ $1 == "b" ]] ; then
-		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		echo -e "  🚀                                  \033[1;34mBONUS\033[m                                     🚀"
-		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		test_bonus
-	elif [[ $1 == "va" ]] ; then
-		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		echo -e "  🚀                            \033[1;34mALL_LEAKS\033[m                                       🚀"
-		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		test_all_leaks
-	elif [[ $1 == "a" ]] ; then
-		test_mandatory
-		test_bonus
-	elif [[ $1 == "d" ]] ; then
-		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		echo -e "  🚀                                  \033[1;34mMINI_DEATH\033[m                                🚀"
-		echo "  🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀"
-		test_mini_death
-	elif [[ $1 == "-f" ]] ; then
-		[[ ! -f $2 ]] && echo "\"$2\" FILE NOT FOUND"
-		[[ -f $2 ]] && test_from_file $2
-	else
-		echo "usage: mstest [m,vm,ne,b,a]"
-		echo "m: mandatory tests"
-		echo "vm: mandatory tests with valgrind"
-		echo "va: all tests with valgrind"
-		echo "ne: tests without environment"
-		echo "b: bonus tests"
-		echo "a: mandatory and bonus tests"
-		echo "d: mandatory pipe segfault test (BRUTAL)"
 
+	if [[ $# -eq 0 ]] ; then
+		print_usage
+		exit 0
 	fi
+
+	mkdir -p "$TMP_OUTDIR"
+	process_tests "$@"
+
 	if [[ $TEST_COUNT -gt 0 ]] ; then
 		print_stats
 	fi
-	# \_o_/ this is my ananas.jpeg \_o_/
 	rm -rf test
 	rm -rf "$TMP_OUTDIR" 2>/dev/null
 
@@ -103,54 +79,358 @@ main() {
 	fi
 }
 
-test_no_env() {
-	FILES="${RUNDIR}/cmds/no_env/*"
-	for file in $FILES
-	do
-		test_without_env $file
+print_usage() {
+	echo -e "  \033[1;33m# **************************************************************************** #"
+	echo -e "  #                          USAGE: mstest [options]                             #"
+	echo -e "  # Options:                                                                     #"
+	echo -e "  #   m                      Run mandatory tests                                 #"
+	echo -e "  #   vm                     Run mandatory tests with memory leak checks         #"
+	echo -e "  #   b                      Run bonus tests                                     #"
+	echo -e "  #   vb                     Run bonus tests with memory leak checks             #"
+	echo -e "  #   ne                     Run tests w/o environment                           #"
+	echo -e "  #   vne                    Run tests w/o environment with memory leak checks   #"
+	echo -e "  #   d                      Run death tests                                     #"
+	echo -e "  #   vd                     Run death tests with memory leak checks             #"
+	echo -e "  #   a                      Run all tests                                       #"
+	echo -e "  #   va                     Run all tests with memory leak checks               #"
+	echo -e "  #   -l|--leaks             Enable memory leak checks                           #"
+	echo -e "  #   -n|--no-env            Disable environment                                 #"
+	echo -e "  #   -f|--file <file>       Run tests specified in a file                       #"
+	echo -e "  #      --dir <directory>   Run tests specified in a directory                  #"
+	echo -e "  #   -h|--help              Show this help message and exit                     #"
+	echo -e "  # **************************************************************************** #\033[m"
+}
+
+process_options() {
+	while [[ $# -gt 0 ]] ; do
+		case $1 in
+			-l|--leaks)
+				TEST_LEAKS="true"
+				shift
+				;;
+			-n|--no-env)
+				NO_ENV="true"
+				shift
+				;;
+			-f|--file)
+				if [[ ! -f $2 ]] ; then
+					echo "FILE NOT FOUND: \"$2\""
+					exit 1
+				fi
+				shift 2
+				;;
+			-d|--dir)
+				if [[ ! -d $2 ]] ; then
+					echo "DIRECTORY NOT FOUND: \"$2\""
+					exit 1
+				fi
+				shift 2
+				;;
+			-h|--help)
+				print_usage
+				exit 0
+				;;
+			m|vm|b|vb|ne|vne|d|vd|a|va)
+				shift
+				;;
+			*)
+				echo "INVALID OPTION: $1"
+				print_usage
+				exit 1
+				;;
+		esac
 	done
 }
 
-test_mandatory_leaks() {
-	FILES="${RUNDIR}/cmds/mand/*"
-	for file in $FILES
-	do
-		test_leaks $file
+process_tests() {
+	if [[ $TEST_LEAKS == "true" ]] ; then
+		print_title "MEMORY_LEAKS" "💧"
+	fi
+	if [[ $NO_ENV == "true" ]] ; then
+		print_title "NO_ENVIRONMENT" "🌐"
+	fi
+	while [[ $# -gt 0 ]] ; do
+		case $1 in
+			m)
+				dir="mand"
+				print_title "MANDATORY" "🚀"
+				run_tests "$dir" "$TEST_LEAKS" "$NO_ENV"
+				shift
+				;;
+			vm)
+				dir="mand"
+				test_leaks="true"
+				print_title "MANDATORY_LEAKS" "🚀"
+				run_tests "$dir" "$test_leaks" "$NO_ENV"
+				shift
+				;;
+			b)
+				dir="bonus"
+				print_title "BONUS" "🎉"
+				run_tests "$dir" "$TEST_LEAKS" "$NO_ENV"
+				shift
+				;;
+			vb)
+				dir="bonus"
+				test_leaks="true"
+				print_title "BONUS_LEAKS" "🎉"
+				run_tests "$dir" "$test_leaks" "$NO_ENV"
+				shift
+				;;
+			ne)
+				dir="no_env"
+				no_env="true"
+				print_title "NO_ENV" "🌐"
+				run_tests "$dir" "$TEST_LEAKS" "$no_env"
+				shift
+				;;
+			vne)
+				dir="no_env"
+				test_leaks="true"
+				no_env="true"
+				print_title "NO_ENV_LEAKS" "🌐"
+				run_tests "$dir" "$test_leaks" "$no_env"
+				shift
+				;;
+			d)
+				dir="mini_death"
+				print_title "MINI_DEATH" "💀"
+				run_tests "$dir" "$TEST_LEAKS" "$NO_ENV"
+				shift
+				;;
+			vd)
+				dir="mini_death"
+				test_leaks="true"
+				print_title "MINI_DEATH_LEAKS" "💀"
+				run_tests "$dir" "$test_leaks" "$NO_ENV"
+				shift
+				;;
+			a)
+				dir="all"
+				print_title "ALL" "🌟"
+				run_tests "$dir" "$TEST_LEAKS" "$NO_ENV"
+				shift
+				;;
+			va)
+				dir="all"
+				test_leaks="true"
+				print_title "ALL_LEAKS" "🌟"
+				run_tests "$dir" "$test_leaks" "$NO_ENV"
+				shift
+				;;
+			-f|--file)
+				file="$2"
+				print_title "FILE: $file" "📄"
+				run_tests_from_file "$file" "$TEST_LEAKS" "$NO_ENV"
+				shift 2
+				;;
+			-d|--dir)
+				dir="$2"
+				print_title "DIRECTORY: $dir" "📁"
+				run_tests_from_dir "$dir" "$TEST_LEAKS" "$NO_ENV"
+				shift 2
+				;;
+			*)
+				shift
+				;;
+		esac
 	done
 }
 
-test_mandatory() {
-	FILES="${RUNDIR}/cmds/mand/*"
-	for file in $FILES
-	do
-		test_from_file $file
+print_title() {
+	local title="$1"
+	local s="$2"
+	local title_length=${#title}
+	local total_length=80
+	local padding_length=$(( (total_length - title_length - 4) / 2 ))
+	local padding_right_length=$((padding_length + (total_length - title_length - 4) % 2))
+	local padding_left=$(printf '%*s' "$padding_length" "")
+	local padding_right=$(printf '%*s' "$padding_right_length" "")
+
+	echo "  $s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s"
+	echo -e "  $s${padding_left}\033[1;34m$title\033[m${padding_right}$s"
+	echo "  $s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s"
+}
+
+run_tests() {
+	dir=$1
+	test_leaks=$2
+	no_env=$3
+	if [[ $dir == "all" ]] ; then
+		FILES="${RUNDIR}/cmds/**/*.sh"
+	else
+		FILES="${RUNDIR}/cmds/${dir}/*"
+	fi
+	for file in $FILES ; do
+		run_test "$file" "$test_leaks" "$no_env"
 	done
 }
 
-test_mini_death() {
-	FILES="${RUNDIR}/cmds/mini_death/*"
-	for file in $FILES
-	do
-		test_from_file $file
-	done
+run_tests_from_file() {
+	file=$1
+	test_leaks=$2
+	no_env=$3
+	run_test "$file" "$test_leaks" "$no_env"
 }
 
-test_bonus() {
-	FILES="${RUNDIR}/cmds/bonus/*"
-	for file in $FILES
-	do
-		test_from_file $file
+run_tests_from_dir() {
+	dir=$1
+	test_leaks=$2
+	no_env=$3
+	FILES="${dir}/*"
+	for file in $FILES ; do
+		run_test "$file" "$test_leaks" "$no_env"
 	done
+
 }
 
-test_all_leaks() {
-	FILES="${RUNDIR}/cmds/**/*.sh"
-	for file in $FILES
-	do
-		test_leaks $file
-	done
-}
+run_test() {
+	file=$1
+	test_leaks=$2
+	no_env=$3
+	if [[ $no_env == "true" ]] ; then
+		env="env -i"
+	fi
+	if  [[ $test_leaks == "true" ]] ; then
+		valgrind="$VALGRIND"
+	fi
+	IFS=''
+	i=1
+	end_of_file=0
+	line_count=0
+	dir_name=$(basename "$(dirname "$file")")
+	file_name=$(basename --suffix=.sh "$file")
+	while [[ $end_of_file == 0 ]] ; do
+		read -r line
+		end_of_file=$?
+		((line_count++))
+		if [[ $line == \#* ]] || [[ $line == "" ]] ; then
+			if [[ $line == "#"[[:blank:]]*[[:blank:]]"#" ]] ; then
+				echo -e "\033[1;33m		$line\033[m" | tr '\t' '    '
+			fi
+			continue
+		else
+			printf "\033[1;35m%-4s\033[m" "  $i:	"
+			tmp_line_count=$line_count
+			while [[ $end_of_file == 0 ]] && [[ $line != \#* ]] && [[ $line != "" ]] ; do
+				INPUT+="$line$NL"
+				read -r line
+				end_of_file=$?
+				((line_count++))
+			done
+			echo -n "$INPUT" | eval "$env $valgrind $MINISHELL_PATH/$EXECUTABLE" 2>"$TMP_OUTDIR/tmp_err_minishell" >"$TMP_OUTDIR/tmp_out_minishell"
+			exit_minishell=$?
+			echo -n "enable -n .$NL$INPUT" | eval "$env bash --posix" 2>"$TMP_OUTDIR/tmp_err_bash" >"$TMP_OUTDIR/tmp_out_bash"
+			exit_bash=$?
+			echo -ne "\033[1;34mSTD_OUT:\033[m "
+			if ! diff -q "$TMP_OUTDIR/tmp_out_minishell" "$TMP_OUTDIR/tmp_out_bash" >/dev/null ; then
+				echo -ne "❌  " | tr '\n' ' '
+				((TEST_KO_OUT++))
+				((FAILED++))
+				mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null
+				mv "$TMP_OUTDIR/tmp_out_minishell" "$OUTDIR/$dir_name/$file_name/stdout_minishell_$i" 2>/dev/null
+				mv "$TMP_OUTDIR/tmp_out_bash" "$OUTDIR/$dir_name/$file_name/stdout_bash_$i" 2>/dev/null
+			else
+				echo -ne "✅  "
+				((TEST_OK++))
+				((ONE++))
+			fi
+			echo -ne "\033[1;33mSTD_ERR:\033[m "
+			stderr_minishell=$(cat "$TMP_OUTDIR/tmp_err_minishell")
+			stderr_bash=$(cat "$TMP_OUTDIR/tmp_err_bash")
+			if grep -q '^bash: line [0-9]*:' <<< "$stderr_bash" ; then
+				# Normalize bash stderr by removing the program name and line number prefix
+				stderr_bash=$(sed 's/^bash: line [0-9]*:/:/' <<< "$stderr_bash")
+				# Normalize minishell stderr by removing its program name prefix
+				stderr_minishell=$(sed "s/^\\($MINISHELL_NAME: line [0-9]*:\\|$MINISHELL_NAME:\\)/:/" <<< "$stderr_minishell")
+				# Remove the next line after a specific syntax error message in bash stderr
+				stderr_bash=$(sed '/^: syntax error near unexpected token/{n; d}' <<< "$stderr_bash")
+			fi
+			if ! diff -q <(echo "$stderr_minishell") <(echo "$stderr_bash") >/dev/null ; then
+				echo -ne "❌  " | tr '\n' ' '
+				((TEST_KO_ERR++))
+				((FAILED++))
+				mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null
+				mv "$TMP_OUTDIR/tmp_err_minishell" "$OUTDIR/$dir_name/$file_name/stderr_minishell_$i" 2>/dev/null
+				mv "$TMP_OUTDIR/tmp_err_bash" "$OUTDIR/$dir_name/$file_name/stderr_bash_$i" 2>/dev/null
+			else
+				echo -ne "✅  "
+				((TEST_OK++))
+				((TWO++))
+			fi
+			echo -ne "\033[1;36mEXIT_CODE:\033[m "
+			if [[ $exit_minishell != $exit_bash ]] ; then
+				echo -ne "❌\033[1;31m [ minishell($exit_minishell)  bash($exit_bash) ]\033[m  " | tr '\n' ' '
+				((TEST_KO_EXIT++))
+				((FAILED++))
+			else
+				echo -ne "✅  "
+				((TEST_OK++))
+				((THREE++))
+			fi
+			if [[ $test_leaks == "true" ]] ; then
+				echo -ne "\033[1;36mLEAKS:\033[m "
+				# Get all error summaries
+				error_summaries=$(cat "$TMP_OUTDIR/tmp_valgrind_out" | grep -a "ERROR SUMMARY:" | awk '{print $4}')
+				IFS=$'\n' read -rd '' -a error_summaries_array <<<"$error_summaries"
+				# Check if any error summary is not 0
+				leak_found=0
+				for error_summary in "${error_summaries_array[@]}" ; do
+					if [ -n "$error_summary" ] && [ "$error_summary" -ne 0 ] ; then
+						leak_found=1
+						break
+					fi
+				done
+				# Check if there are any open file descriptors not inherited from parent
+				open_file_descriptors=$(
+					awk '
+						# If the line starts with a PID and "Open file descriptor"
+						/^==[0-9]+== Open file descriptor/ {
+							# Store the PID and the line
+							pid=$1
+							line=$0
 
+							# Keep reading lines until a line that starts with the same PID gets found
+							while (getline && $1 != pid);
+
+							# Check if the line does not contain "<inherited from parent>"
+							if ($0 !~ /<inherited from parent>/) {
+								print line
+							}
+						}
+					' "$TMP_OUTDIR/tmp_valgrind_out"
+				)
+				if [ -n "$open_file_descriptors" ] ; then
+					leak_found=1
+				fi
+				if [ "$leak_found" -ne 0 ] ; then
+					echo -ne "❌ "
+					((LEAKS++))
+					mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null
+					mv "$TMP_OUTDIR/tmp_valgrind_out" "$OUTDIR/$dir_name/$file_name/valgrind_out_$i" 2>/dev/null
+				else
+					echo -ne "✅ "
+				fi
+			fi
+			INPUT=""
+			((i++))
+			((TEST_COUNT++))
+			echo -e "\033[0;90m$file:$tmp_line_count\033[m  "
+			if [[ $ONE == 1 && $TWO == 1 && $THREE == 1 ]] ; then
+				((GOOD_TEST++))
+				((ONE--))
+				((TWO--))
+				((THREE--))
+			else
+				ONE=0
+				TWO=0
+				THREE=0
+			fi
+		fi
+	done < "$file"
+	rm -f "$TMP_OUTDIR/tmp_valgrind_out"
+	find "$OUTDIR" -type d -empty -delete 2>/dev/null
+}
 
 print_stats() {
 	echo "🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁"
@@ -187,351 +467,6 @@ print_stats() {
 	echo -e "\033[1;31m                                     ❌ $FAILED \033[m  "
 	echo -ne "\033[1;32m                                     ✅ $TEST_OK \033[m  "
 	echo ""
-}
-
-test_from_file() {
-	IFS=''
-	i=1
-	end_of_file=0
-	line_count=0
-	dir_name=$(basename $(dirname $1))
-	file_name=$(basename --suffix=.sh $1)
-	while [[ $end_of_file == 0 ]] ;
-	do
-		read -r line
-		end_of_file=$?
-		((line_count++))
-		if [[ $line == \#* ]] || [[ $line == "" ]] ; then
-			# if [[ $line == "###"[[:blank:]]*[[:blank:]]"###" ]] ; then
-			# 	echo -e "\033[1;33m$line\033[m"
-			if [[ $line == "#"[[:blank:]]*[[:blank:]]"#" ]] ; then
-				echo -e "\033[1;33m		$line\033[m" | tr '\t' '    '
-			fi
-			continue
-		else
-			printf "\033[1;35m%-4s\033[m" "  $i:	"
-			tmp_line_count=$line_count
-			while [[ $end_of_file == 0 ]] && [[ $line != \#* ]] && [[ $line != "" ]] ;
-			do
-				INPUT+="$line$NL"
-				read -r line
-				end_of_file=$?
-				((line_count++))
-			done
-			# INPUT=${INPUT%?}
-			echo -n "$INPUT" | $MINISHELL_PATH/$EXECUTABLE 2>"$TMP_OUTDIR/tmp_err_minishell" >"$TMP_OUTDIR/tmp_out_minishell"
-			exit_minishell=$?
-			echo -n "enable -n .$NL$INPUT" | bash --posix 2>"$TMP_OUTDIR/tmp_err_bash" >"$TMP_OUTDIR/tmp_out_bash"
-			exit_bash=$?
-			echo -ne "\033[1;34mSTD_OUT:\033[m "
-			if ! diff -q "$TMP_OUTDIR/tmp_out_minishell" "$TMP_OUTDIR/tmp_out_bash" >/dev/null ;
-			then
-				echo -ne "❌  " | tr '\n' ' '
-				((TEST_KO_OUT++))
-				((FAILED++))
-				mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null
-				mv "$TMP_OUTDIR/tmp_out_minishell" "$OUTDIR/$dir_name/$file_name/stdout_minishell_$i" 2>/dev/null
-				mv "$TMP_OUTDIR/tmp_out_bash" "$OUTDIR/$dir_name/$file_name/stdout_bash_$i" 2>/dev/null
-			else
-				echo -ne "✅  "
-				((TEST_OK++))
-				((ONE++))
-			fi
-			echo -ne "\033[1;33mSTD_ERR:\033[m "
-			stderr_minishell=$(cat "$TMP_OUTDIR/tmp_err_minishell")
-			stderr_bash=$(cat "$TMP_OUTDIR/tmp_err_bash")
-			if grep -q '^bash: line [0-9]*:' <<< "$stderr_bash" ;
-			then
-				# Normalize bash stderr by removing the program name and line number prefix
-				stderr_bash=$(sed 's/^bash: line [0-9]*:/:/' <<< "$stderr_bash")
-
-				# Normalize minishell stderr by removing its program name prefix
-				stderr_minishell=$(sed "s/^\\($MINISHELL_NAME: line [0-9]*:\\|$MINISHELL_NAME:\\)/:/" <<< "$stderr_minishell")
-
-				# Remove the next line after a specific syntax error message in bash stderr
-				stderr_bash=$(sed '/^: syntax error near unexpected token/{n; d}' <<< "$stderr_bash")
-			fi
-			if ! diff -q <(echo "$stderr_minishell") <(echo "$stderr_bash") >/dev/null ;
-			then
-				echo -ne "❌  " | tr '\n' ' '
-				((TEST_KO_ERR++))
-				((FAILED++))
-				mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null
-				mv "$TMP_OUTDIR/tmp_err_minishell" "$OUTDIR/$dir_name/$file_name/stderr_minishell_$i" 2>/dev/null
-				mv "$TMP_OUTDIR/tmp_err_bash" "$OUTDIR/$dir_name/$file_name/stderr_bash_$i" 2>/dev/null
-			else
-				echo -ne "✅  "
-				((TEST_OK++))
-				((TWO++))
-			fi
-			echo -ne "\033[1;36mEXIT_CODE:\033[m "
-			if [[ $exit_minishell != $exit_bash ]] ;
-			then
-				echo -ne "❌\033[1;31m [ minishell($exit_minishell)  bash($exit_bash) ]\033[m  " | tr '\n' ' '
-				((TEST_KO_EXIT++))
-				((FAILED++))
-			else
-				echo -ne "✅  "
-				((TEST_OK++))
-				((THREE++))
-			fi
-			INPUT=""
-			((i++))
-			((TEST_COUNT++))
-			echo -e "\033[0;90m$1:$tmp_line_count\033[m  "
-			if [[ $ONE == 1 && $TWO == 1 && $THREE == 1 ]] ;
-			then
-				((GOOD_TEST++))
-				((ONE--))
-				((TWO--))
-				((THREE--))
-			else
-				ONE=0
-				TWO=0
-				THREE=0
-			fi
-		fi
-	done < "$1"
-}
-
-test_leaks() {
-	valgrind_ignore_rel_path="norminette"
-	valgrind_ignore_abs_path="/bin/* /usr/bin/* /usr/sbin/*"
-	valgrind_flags=(
-	--errors-for-leak-kinds=all
-	--leak-check=full
-	--show-error-list=yes
-	--show-leak-kinds=all
-	--suppressions="$MINISHELL_PATH"/minishell.supp
-	--trace-children=yes
-	--trace-children-skip=$(echo "$valgrind_ignore_abs_path" $(which "$valgrind_ignore_rel_path") | tr ' ' ',')
-	--track-fds=all
-	--track-origins=yes
-	--log-file="$TMP_OUTDIR/tmp_valgrind_out")
-	IFS=''
-	i=1
-	end_of_file=0
-	line_count=0
-	dir_name=$(basename $(dirname $1))
-	file_name=$(basename --suffix=.sh $1)
-	while [[ $end_of_file == 0 ]] ;
-	do
-		read -r line
-		end_of_file=$?
-		((line_count++))
-		if [[ $line == \#* ]] || [[ $line == "" ]] ; then
-			# if [[ $line == "###"[[:blank:]]*[[:blank:]]"###" ]] ; then
-			# 	echo -e "\033[1;33m$line\033[m"
-			if [[ $line == "#"[[:blank:]]*[[:blank:]]"#" ]] ; then
-				echo -e "\033[1;33m		$line\033[m" | tr '\t' '    '
-			fi
-			continue
-		else
-			printf "\033[0;35m%-4s\033[m" "  $i:	"
-			tmp_line_count=$line_count
-			while [[ $end_of_file == 0 ]] && [[ $line != \#* ]] && [[ $line != "" ]] ;
-			do
-				INPUT+="$line$NL"
-				read -r line
-				end_of_file=$?
-				((line_count++))
-			done
-			# INPUT=${INPUT%?}
-			echo -n "$INPUT" | $MINISHELL_PATH/$EXECUTABLE 2>"$TMP_OUTDIR/tmp_err_minishell" >"$TMP_OUTDIR/tmp_out_minishell"
-			exit_minishell=$?
-			echo -n "enable -n .$NL$INPUT" | bash --posix 2>"$TMP_OUTDIR/tmp_err_bash" >"$TMP_OUTDIR/tmp_out_bash"
-			exit_bash=$?
-			echo -ne "\033[1;34mSTD_OUT:\033[m "
-			if ! diff -q "$TMP_OUTDIR/tmp_out_minishell" "$TMP_OUTDIR/tmp_out_bash" >/dev/null ;
-			then
-				echo -ne "❌  " | tr '\n' ' '
-				((TEST_KO_OUT++))
-				((FAILED++))
-			else
-				echo -ne "✅  "
-				((TEST_OK++))
-				((ONE++))
-			fi
-			echo -ne "\033[1;33mSTD_ERR:\033[m "
-			if [[ -s $TMP_OUTDIR/tmp_err_minishell && ! -s $TMP_OUTDIR/tmp_err_bash ]] || [[ ! -s $TMP_OUTDIR/tmp_err_minishell && -s $TMP_OUTDIR/tmp_err_bash ]] ;
-			then
-				echo -ne "❌  " | tr '\n' ' '
-				((TEST_KO_ERR++))
-				((FAILED++))
-			else
-				echo -ne "✅  "
-				((TEST_OK++))
-				((TWO++))
-			fi
-			echo -ne "\033[1;36mEXIT_CODE:\033[m "
-			if [[ $exit_minishell != $exit_bash ]] ;
-			then
-				echo -ne "❌\033[1;31m [ minishell($exit_minishell)  bash($exit_bash) ]\033[m  " | tr '\n' ' '
-				((TEST_KO_EXIT++))
-				((FAILED++))
-			else
-				echo -ne "✅  "
-				((TEST_OK++))
-				((THREE++))
-			fi
-			echo -ne "\033[1;36mLEAKS:\033[m "
-			echo -n "$INPUT" | eval "valgrind ${valgrind_flags[@]} $MINISHELL_PATH/$EXECUTABLE" 2>/dev/null >/dev/null
-			# Get all error summaries
-			error_summaries=$(cat "$TMP_OUTDIR/tmp_valgrind_out" | grep -a "ERROR SUMMARY:" | awk '{print $4}')
-			IFS=$'\n' read -rd '' -a error_summaries_array <<<"$error_summaries"
-			# Check if any error summary is not 0
-			leak_found=0
-			for error_summary in "${error_summaries_array[@]}"
-			do
-				if [ -n "$error_summary" ] && [ "$error_summary" -ne 0 ]
-				then
-					leak_found=1
-					break
-				fi
-			done
-			# Check if there are any open file descriptors not inherited from parent
-			open_file_descriptors=$(
-				awk '
-					# If the line starts with a PID and "Open file descriptor"
-					/^==[0-9]+== Open file descriptor/ {
-						# Store the PID and the line
-						pid=$1
-						line=$0
-
-						# Keep reading lines until a line that starts with the same PID gets found
-						while (getline && $1 != pid);
-
-						# Check if the line does not contain "<inherited from parent>"
-						if ($0 !~ /<inherited from parent>/) {
-							print line
-						}
-					}
-				' "$TMP_OUTDIR/tmp_valgrind_out"
-			)
-			if [ -n "$open_file_descriptors" ]
-			then
-				leak_found=1
-			fi
-			if [ "$leak_found" -ne 0 ]
-			then
-				echo -ne "❌ "
-				((LEAKS++))
-				mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null
-				mv "$TMP_OUTDIR/tmp_valgrind_out" "$OUTDIR/$dir_name/$file_name/valgrind_out_$i" 2>/dev/null
-			else
-				echo -ne "✅ "
-			fi
-			INPUT=""
-			((i++))
-			((TEST_COUNT++))
-			echo -e "\033[0;90m$1:$tmp_line_count\033[m  "
-			if [[ $ONE == 1 && $TWO == 1 && $THREE == 1 ]] ;
-			then
-				((GOOD_TEST++))
-				((ONE--))
-				((TWO--))
-				((THREE--))
-			else
-				ONE=0
-				TWO=0
-				THREE=0
-			fi
-		fi
-	done < "$1"
-	rm -f "$TMP_OUTDIR/tmp_valgrind_out"
-	find "$OUTDIR" -type d -empty -delete 2>/dev/null
-}
-
-test_without_env() {
-	IFS=''
-	i=1
-	end_of_file=0
-	line_count=0
-	dir_name=$(basename $(dirname $1))
-	file_name=$(basename --suffix=.sh $1)
-	while [[ $end_of_file == 0 ]] ;
-	do
-		read -r line
-		end_of_file=$?
-		((line_count++))
-		if [[ $line == \#* ]] || [[ $line == "" ]] ; then
-			# if [[ $line == "###"[[:blank:]]*[[:blank:]]"###" ]] ; then
-			# 	echo -e "\033[1;33m$line\033[m"
-			if [[ $line == "#"[[:blank:]]*[[:blank:]]"#" ]] ; then
-				echo -e "\033[1;33m		$line\033[m" | tr '\t' '    '
-			fi
-			continue
-		else
-			printf "\033[0;35m%-4s\033[m" "  $i:	"
-			tmp_line_count=$line_count
-			while [[ $end_of_file == 0 ]] && [[ $line != \#* ]] && [[ $line != "" ]] ;
-			do
-				INPUT+="$line$NL"
-				read -r line
-				end_of_file=$?
-				((line_count++))
-			done
-			# INPUT=${INPUT%?}
-			echo -n "$INPUT" | env -i $MINISHELL_PATH/$EXECUTABLE 2>"$TMP_OUTDIR/tmp_err_minishell" >"$TMP_OUTDIR/tmp_out_minishell"
-			exit_minishell=$?
-			echo -n "enable -n .$NL$INPUT" | env -i bash --posix 2>"$TMP_OUTDIR/tmp_err_bash" >"$TMP_OUTDIR/tmp_out_bash"
-			exit_bash=$?
-			echo -ne "\033[1;34mSTD_OUT:\033[m "
-			if ! diff -q "$TMP_OUTDIR/tmp_out_minishell" "$TMP_OUTDIR/tmp_out_bash" >/dev/null ;
-			then
-				echo -ne "❌  " | tr '\n' ' '
-				((TEST_KO_OUT++))
-				((FAILED++))
-				mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null
-				mv "$TMP_OUTDIR/tmp_out_minishell" "$OUTDIR/$dir_name/$file_name/stdout_minishell_$i" 2>/dev/null
-				mv "$TMP_OUTDIR/tmp_out_bash" "$OUTDIR/$dir_name/$file_name/stdout_bash_$i" 2>/dev/null
-			else
-				echo -ne "✅  "
-				((TEST_OK++))
-				((ONE++))
-			fi
-			echo -ne "\033[1;33mSTD_ERR:\033[m "
-			if [[ -s $TMP_OUTDIR/tmp_err_minishell && ! -s $TMP_OUTDIR/tmp_err_bash ]] || [[ ! -s $TMP_OUTDIR/tmp_err_minishell && -s $TMP_OUTDIR/tmp_err_bash ]] ;
-			then
-				echo -ne "❌  " | tr '\n' ' '
-				((TEST_KO_ERR++))
-				((FAILED++))
-				mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null
-				mv "$TMP_OUTDIR/tmp_err_minishell" "$OUTDIR/$dir_name/$file_name/stderr_minishell_$i" 2>/dev/null
-				mv "$TMP_OUTDIR/tmp_err_bash" "$OUTDIR/$dir_name/$file_name/stderr_bash_$i" 2>/dev/null
-			else
-				echo -ne "✅  "
-				((TEST_OK++))
-				((TWO++))
-			fi
-			echo -ne "\033[1;36mEXIT_CODE:\033[m "
-			if [[ $exit_minishell != $exit_bash ]] ;
-			then
-				echo -ne "❌\033[1;31m [ minishell($exit_minishell)  bash($exit_bash) ]\033[m  " | tr '\n' ' '
-				((TEST_KO_EXIT++))
-				((FAILED++))
-			else
-				echo -ne "✅  "
-				((TEST_OK++))
-				((THREE++))
-			fi
-			INPUT=""
-			((i++))
-			((TEST_COUNT++))
-			echo -e "\033[0;90m$1:$tmp_line_count\033[m  "
-			if [[ $ONE == 1 && $TWO == 1 && $THREE == 1 ]] ;
-			then
-				((GOOD_TEST++))
-				((ONE--))
-				((TWO--))
-				((THREE--))
-			else
-				ONE=0
-				TWO=0
-				THREE=0
-			fi
-		fi
-	done < "$1"
 }
 
 # Start the tester

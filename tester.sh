@@ -144,10 +144,10 @@ process_options() {
 
 process_tests() {
 	if [[ $TEST_LEAKS == "true" ]]; then
-		print_title "MEMORY_LEAKS" "⭐"
+		print_title "MEMORY_LEAKS" "💧"
 	fi
 	if [[ $NO_ENV == "true" ]]; then
-		print_title "NO_ENVIRONMENT" "⭐"
+		print_title "NO_ENVIRONMENT" "🌐"
 	fi
 	while [[ $# -gt 0 ]]; do
 		case $1 in
@@ -166,21 +166,21 @@ process_tests() {
 				;;
 			b)
 				dir="bonus"
-				print_title "BONUS" "🚀"
+				print_title "BONUS" "🎉"
 				run_tests "$dir" "$TEST_LEAKS" "$NO_ENV"
 				shift
 				;;
 			vb)
 				dir="bonus"
 				test_leaks="true"
-				print_title "BONUS_LEAKS" "🚀"
+				print_title "BONUS_LEAKS" "🎉"
 				run_tests "$dir" "$test_leaks" "$NO_ENV"
 				shift
 				;;
 			ne)
 				dir="no_env"
 				no_env="true"
-				print_title "NO_ENV" "🚀"
+				print_title "NO_ENV" "🌐"
 				run_tests "$dir" "$TEST_LEAKS" "$no_env"
 				shift
 				;;
@@ -188,45 +188,45 @@ process_tests() {
 				dir="no_env"
 				test_leaks="true"
 				no_env="true"
-				print_title "NO_ENV_LEAKS" "🚀"
+				print_title "NO_ENV_LEAKS" "🌐"
 				run_tests "$dir" "$test_leaks" "$no_env"
 				shift
 				;;
 			d)
 				dir="mini_death"
-				print_title "MINI_DEATH" "🚀"
+				print_title "MINI_DEATH" "💀"
 				run_tests "$dir" "$TEST_LEAKS" "$NO_ENV"
 				shift
 				;;
 			vd)
 				dir="mini_death"
 				test_leaks="true"
-				print_title "MINI_DEATH_LEAKS" "🚀"
+				print_title "MINI_DEATH_LEAKS" "💀"
 				run_tests "$dir" "$test_leaks" "$NO_ENV"
 				shift
 				;;
 			a)
 				dir="all"
-				print_title "ALL" "🚀"
+				print_title "ALL" "🌟"
 				run_tests "$dir" "$TEST_LEAKS" "$NO_ENV"
 				shift
 				;;
 			va)
 				dir="all"
 				test_leaks="true"
-				print_title "ALL_LEAKS" "🚀"
+				print_title "ALL_LEAKS" "🌟"
 				run_tests "$dir" "$test_leaks" "$NO_ENV"
 				shift
 				;;
 			-f|--file)
 				file="$2"
-				print_title "FILE: $file" "🚀"
+				print_title "FILE: $file" "📄"
 				run_tests_from_file "$file" "$TEST_LEAKS" "$NO_ENV"
 				shift 2
 				;;
 			-d|--dir)
 				dir="$2"
-				print_title "DIRECTORY: $dir" "🚀"
+				print_title "DIRECTORY: $dir" "📁"
 				run_tests_from_dir "$dir" "$TEST_LEAKS" "$NO_ENV"
 				shift 2
 				;;

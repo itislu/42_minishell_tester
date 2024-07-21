@@ -54,7 +54,7 @@ main() {
 		fi
 	fi
 
-	if [[ $# -eq 0 ]]; then
+	if [[ $# -eq 0 ]] ; then
 		print_usage
 		exit 0
 	fi
@@ -102,7 +102,7 @@ print_usage() {
 }
 
 process_options() {
-	while [[ $# -gt 0 ]]; do
+	while [[ $# -gt 0 ]] ; do
 		case $1 in
 			-l|--leaks)
 				TEST_LEAKS="true"
@@ -113,14 +113,14 @@ process_options() {
 				shift
 				;;
 			-f|--file)
-				if [[ ! -f $2 ]]; then
+				if [[ ! -f $2 ]] ; then
 					echo "FILE NOT FOUND: \"$2\""
 					exit 1
 				fi
 				shift 2
 				;;
 			-d|--dir)
-				if [[ ! -d $2 ]]; then
+				if [[ ! -d $2 ]] ; then
 					echo "DIRECTORY NOT FOUND: \"$2\""
 					exit 1
 				fi
@@ -143,13 +143,13 @@ process_options() {
 }
 
 process_tests() {
-	if [[ $TEST_LEAKS == "true" ]]; then
+	if [[ $TEST_LEAKS == "true" ]] ; then
 		print_title "MEMORY_LEAKS" "💧"
 	fi
-	if [[ $NO_ENV == "true" ]]; then
+	if [[ $NO_ENV == "true" ]] ; then
 		print_title "NO_ENVIRONMENT" "🌐"
 	fi
-	while [[ $# -gt 0 ]]; do
+	while [[ $# -gt 0 ]] ; do
 		case $1 in
 			m)
 				dir="mand"
@@ -256,12 +256,12 @@ run_tests() {
 	dir=$1
 	test_leaks=$2
 	no_env=$3
-	if [[ $dir == "all" ]]; then
+	if [[ $dir == "all" ]] ; then
 		FILES="${RUNDIR}/cmds/**/*.sh"
 	else
 		FILES="${RUNDIR}/cmds/${dir}/*"
 	fi
-	for file in $FILES; do
+	for file in $FILES ; do
 		run_test "$file" "$test_leaks" "$no_env"
 	done
 }
@@ -278,7 +278,7 @@ run_tests_from_dir() {
 	test_leaks=$2
 	no_env=$3
 	FILES="${dir}/*"
-	for file in $FILES; do
+	for file in $FILES ; do
 		run_test "$file" "$test_leaks" "$no_env"
 	done
 
@@ -288,10 +288,10 @@ run_test() {
 	file=$1
 	test_leaks=$2
 	no_env=$3
-	if [[ $no_env == "true" ]]; then
+	if [[ $no_env == "true" ]] ; then
 		env="env -i"
 	fi
-	if  [[ $test_leaks == "true" ]]; then
+	if  [[ $test_leaks == "true" ]] ; then
 		valgrind="$VALGRIND"
 	fi
 	IFS=''
@@ -300,19 +300,19 @@ run_test() {
 	line_count=0
 	dir_name=$(basename "$(dirname "$file")")
 	file_name=$(basename --suffix=.sh "$file")
-	while [[ $end_of_file == 0 ]]; do
+	while [[ $end_of_file == 0 ]] ; do
 		read -r line
 		end_of_file=$?
 		((line_count++))
-		if [[ $line == \#* ]] || [[ $line == "" ]]; then
-			if [[ $line == "#"[[:blank:]]*[[:blank:]]"#" ]]; then
+		if [[ $line == \#* ]] || [[ $line == "" ]] ; then
+			if [[ $line == "#"[[:blank:]]*[[:blank:]]"#" ]] ; then
 				echo -e "\033[1;33m		$line\033[m" | tr '\t' '    '
 			fi
 			continue
 		else
 			printf "\033[1;35m%-4s\033[m" "  $i:	"
 			tmp_line_count=$line_count
-			while [[ $end_of_file == 0 ]] && [[ $line != \#* ]] && [[ $line != "" ]]; do
+			while [[ $end_of_file == 0 ]] && [[ $line != \#* ]] && [[ $line != "" ]] ; do
 				INPUT+="$line$NL"
 				read -r line
 				end_of_file=$?
@@ -368,15 +368,15 @@ run_test() {
 				((TEST_OK++))
 				((THREE++))
 			fi
-			if [[ $test_leaks == "true" ]]; then
+			if [[ $test_leaks == "true" ]] ; then
 				echo -ne "\033[1;36mLEAKS:\033[m "
 				# Get all error summaries
 				error_summaries=$(cat "$TMP_OUTDIR/tmp_valgrind_out" | grep -a "ERROR SUMMARY:" | awk '{print $4}')
 				IFS=$'\n' read -rd '' -a error_summaries_array <<<"$error_summaries"
 				# Check if any error summary is not 0
 				leak_found=0
-				for error_summary in "${error_summaries_array[@]}"; do
-					if [ -n "$error_summary" ] && [ "$error_summary" -ne 0 ]; then
+				for error_summary in "${error_summaries_array[@]}" ; do
+					if [ -n "$error_summary" ] && [ "$error_summary" -ne 0 ] ; then
 						leak_found=1
 						break
 					fi
@@ -400,10 +400,10 @@ run_test() {
 						}
 					' "$TMP_OUTDIR/tmp_valgrind_out"
 				)
-				if [ -n "$open_file_descriptors" ]; then
+				if [ -n "$open_file_descriptors" ] ; then
 					leak_found=1
 				fi
-				if [ "$leak_found" -ne 0 ]; then
+				if [ "$leak_found" -ne 0 ] ; then
 					echo -ne "❌ "
 					((LEAKS++))
 					mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null

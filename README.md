@@ -91,6 +91,8 @@ mstest
 
 # How To Launch the Tester
 
+<img align=center src="https://github.com/LeaYeh/42_minishell_tester/blob/master/usage.png">
+
 ```
 mstest m  # Run mandatory tests
 ```

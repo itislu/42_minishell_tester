@@ -22,6 +22,10 @@ if [[ $READLINE == "true" ]] ; then
 	ESCAPED_PROMPT=$(echo -n "$MINISHELL_PROMPT" | sed 's:[][\/.^$*]:\\&:g')
 fi
 
+# Get the exit message of the minishell in case it needs to be filtered out
+# The exit message should always get printed to stderr, bash does it too (see `exit 2>/dev/null`)
+MINISHELL_EXIT_MSG=$(echo -n "" | $MINISHELL_PATH/$EXECUTABLE 2>&1 | sed "s/^$ESCAPED_PROMPT//")
+
 VALGRIND_FLAGS=(
 	--errors-for-leak-kinds=all
 	--leak-check=full
@@ -351,6 +355,10 @@ run_test() {
 				((ONE++))
 			fi
 			echo -ne "\033[1;33mSTD_ERR:\033[m "
+			if [[ -n "$MINISHELL_EXIT_MSG" ]] ; then
+				# Filter out the exit message from stderr
+				sed -i "/^$MINISHELL_EXIT_MSG$/d" "$TMP_OUTDIR/tmp_err_minishell"
+			fi
 			if grep -q '^bash: line [0-9]*:' "$TMP_OUTDIR/tmp_err_bash" ; then
 				# Normalize bash stderr by removing the program name and line number prefix
 				sed -i 's/^bash: line [0-9]*:/:/' "$TMP_OUTDIR/tmp_err_bash"

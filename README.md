@@ -18,17 +18,19 @@
 
 # Menu
 
-[Install & Run](#how-to-install-and-run)
+- [Install & Run](#how-to-install-and-run)
 
-[Usage](#how-to-launch-the-tester)
+- [Usage](#how-to-launch-the-tester)
 
-[CI with GitHub Actions](#continuous-integration-with-github-actions)
+- [CI with GitHub Actions](#continuous-integration-with-github-actions)
 
-[Troubleshooting](#troubleshooting)
+- [Troubleshooting](#troubleshooting)
 
-[Disclaimer](#disclaimer)
+  - [All my STDOUT tests fail](#all-my-stdout-tests-fail)
 
-[Contributors](#the-people-who-made-this-tester-possible)
+- [Disclaimer](#disclaimer)
+
+- [Contributors](#the-people-who-made-this-tester-possible)
 
 ---
 

@@ -9,7 +9,18 @@ OUTDIR=$MINISHELL_PATH/tester_output
 
 # Get the name of the minishell by running a command that produces an error
 # The name will then be filtered out from error messages
-MINISHELL_NAME=$(echo -n "|" | $MINISHELL_PATH/$EXECUTABLE 2>&1 | head -n 1 | awk -F: '{if ($0 ~ /:/) print $1; else print ""}')
+MINISHELL_NAME=$(echo -n "|" | $MINISHELL_PATH/$EXECUTABLE 2>&1)
+if [[ $(echo -n "$MINISHELL_NAME" | wc -l) -gt 1 ]] ; then
+	MINISHELL_NAME=$(echo -n "$MINISHELL_NAME" | awk 'NR==2')
+	READLINE="true"
+fi
+MINISHELL_NAME=$(echo -n "$MINISHELL_NAME" | awk -F: '{if ($0 ~ /:/) print $1; else print ""}')
+
+# Get the minishell prompt in case it needs to be filtered out because of the use of readline
+if [[ $READLINE == "true" ]] ; then
+	MINISHELL_PROMPT=$(echo -n "everything_before_this_is_the_prompt" | $MINISHELL_PATH/$EXECUTABLE 2>&1 | head -n 1 | sed 's/everything_before_this_is_the_prompt.*//')
+	ESCAPED_PROMPT=$(echo -n "$MINISHELL_PROMPT" | sed 's:[][\/.^$*]:\\&:g')
+fi
 
 VALGRIND_FLAGS=(
 	--errors-for-leak-kinds=all
@@ -323,6 +334,10 @@ run_test() {
 			echo -n "enable -n .$NL$INPUT" | eval "$env bash --posix" 2>"$TMP_OUTDIR/tmp_err_bash" >"$TMP_OUTDIR/tmp_out_bash"
 			exit_bash=$?
 			echo -ne "\033[1;34mSTD_OUT:\033[m "
+			if [[ $READLINE == "true" ]] ; then
+				# Filter out all lines with the minishell prompt from stdout
+				sed -i "/^$ESCAPED_PROMPT/d" "$TMP_OUTDIR/tmp_out_minishell"
+			fi
 			if ! diff -q "$TMP_OUTDIR/tmp_out_minishell" "$TMP_OUTDIR/tmp_out_bash" >/dev/null ; then
 				echo -ne "❌  " | tr '\n' ' '
 				((TEST_KO_OUT++))

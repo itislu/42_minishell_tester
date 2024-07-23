@@ -1,6 +1,6 @@
 <h1 align=center>📖 42_minishell_tester</h1>
 <h2 align="center">Forked from <a href="https://github.com/zstenger93">zstenger93</a>'s <a href="https://github.com/zstenger93/42_minishell_tester">original tester</a> by <a href="https://github.com/LeaYeh">LeaYeh</a> and <a href="https://github.com/itislu">itislu</a> from 42 Vienna</h2>
-<img align=center src="https://github.com/LeaYeh/42_minishell_tester/blob/master/tester.png">
+<img align=center src="https://github.com/LeaYeh/42_minishell_tester/blob/master/media/tester.png">
 
 # Updates
 
@@ -91,7 +91,7 @@ mstest
 
 # How To Launch the Tester
 
-<img align=center src="https://github.com/LeaYeh/42_minishell_tester/blob/master/usage.png">
+<img align=center src="https://github.com/LeaYeh/42_minishell_tester/blob/master/media/usage.png">
 
 ```
 mstest m  # Run mandatory tests

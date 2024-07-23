@@ -9,7 +9,7 @@ OUTDIR=$MINISHELL_PATH/tester_output
 
 # Get the name of the minishell by running a command that produces an error
 # The name will then be filtered out from error messages
-MINISHELL_NAME=$(echo -n "forcing_error_message" | $MINISHELL_PATH/$EXECUTABLE 2>&1 | head -n 1 | awk -F: '{if ($0 ~ /:/) print $1; else print ""}')
+MINISHELL_NAME=$(echo -n "|" | $MINISHELL_PATH/$EXECUTABLE 2>&1 | head -n 1 | awk -F: '{if ($0 ~ /:/) print $1; else print ""}')
 
 VALGRIND_FLAGS=(
 	--errors-for-leak-kinds=all

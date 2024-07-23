@@ -336,17 +336,15 @@ run_test() {
 				((ONE++))
 			fi
 			echo -ne "\033[1;33mSTD_ERR:\033[m "
-			stderr_minishell=$(cat "$TMP_OUTDIR/tmp_err_minishell")
-			stderr_bash=$(cat "$TMP_OUTDIR/tmp_err_bash")
-			if grep -q '^bash: line [0-9]*:' <<< "$stderr_bash" ; then
+			if grep -q '^bash: line [0-9]*:' "$TMP_OUTDIR/tmp_err_bash" ; then
 				# Normalize bash stderr by removing the program name and line number prefix
-				stderr_bash=$(sed 's/^bash: line [0-9]*:/:/' <<< "$stderr_bash")
+				sed -i 's/^bash: line [0-9]*:/:/' "$TMP_OUTDIR/tmp_err_bash"
 				# Normalize minishell stderr by removing its program name prefix
-				stderr_minishell=$(sed "s/^\\($MINISHELL_NAME: line [0-9]*:\\|$MINISHELL_NAME:\\)/:/" <<< "$stderr_minishell")
+				sed -i "s/^\\($MINISHELL_NAME: line [0-9]*:\\|$MINISHELL_NAME:\\)/:/" "$TMP_OUTDIR/tmp_err_minishell"
 				# Remove the next line after a specific syntax error message in bash stderr
-				stderr_bash=$(sed '/^: syntax error near unexpected token/{n; d}' <<< "$stderr_bash")
+				sed -i '/^: syntax error near unexpected token/{n; d}' "$TMP_OUTDIR/tmp_err_bash"
 			fi
-			if ! diff -q <(echo "$stderr_minishell") <(echo "$stderr_bash") >/dev/null ; then
+			if ! diff -q "$TMP_OUTDIR/tmp_err_minishell" "$TMP_OUTDIR/tmp_err_bash" >/dev/null ; then
 				echo -ne "❌  " | tr '\n' ' '
 				((TEST_KO_ERR++))
 				((FAILED++))

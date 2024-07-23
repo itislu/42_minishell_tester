@@ -32,9 +32,9 @@
 ---
 
 # Setup
-First you should comment out everything what prints to terminal eg "exit" at exit, printf's for debugging etc
+First you should comment out everything what prints to terminal eg "exit" at exit, printf's for debugging etc.
 Then modify your main loop:
-You should only read with readline and use your own prompt when you launch the program by yourself typing ./minihsell into the terminal, you can check it this way:
+You should only read with readline and use your own prompt when you launch the program by yourself typing ./minishell into the terminal. You can check it this way:
 
 
 ```c
@@ -51,7 +51,7 @@ Else if it is opened by another program/tester for example then use gnl as follo
 	free(line);
 ```
 
-So it should look like something like this:
+So it should look something like this:
 
 ```c
 	if (isatty(fileno(stdin)))

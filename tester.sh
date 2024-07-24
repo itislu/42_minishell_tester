@@ -268,41 +268,45 @@ print_title() {
 }
 
 run_tests() {
-	dir=$1
-	test_leaks=$2
-	no_env=$3
+	local dir=$1
+	local test_leaks=$2
+	local no_env=$3
+	local files
+
 	if [[ $dir == "all" ]] ; then
-		FILES="${RUNDIR}/cmds/**/*.sh"
+		files="${RUNDIR}/cmds/**/*.sh"
 	else
-		FILES="${RUNDIR}/cmds/${dir}/*"
+		files="${RUNDIR}/cmds/${dir}/*"
 	fi
-	for file in $FILES ; do
+	for file in $files ; do
 		run_test "$file" "$test_leaks" "$no_env"
 	done
 }
 
 run_tests_from_file() {
-	file=$1
-	test_leaks=$2
-	no_env=$3
+	local file=$1
+	local test_leaks=$2
+	local no_env=$3
+
 	run_test "$file" "$test_leaks" "$no_env"
 }
 
 run_tests_from_dir() {
-	dir=$1
-	test_leaks=$2
-	no_env=$3
-	FILES="${dir}/*"
-	for file in $FILES ; do
+	local dir=$1
+	local test_leaks=$2
+	local no_env=$3
+	local files="${dir}/*"
+
+	for file in $files ; do
 		run_test "$file" "$test_leaks" "$no_env"
 	done
-
 }
 
 run_test() {
-	file=$1
-	test_leaks=$2
-	no_env=$3
+	local file=$1
+	local test_leaks=$2
+	local no_env=$3
+
 	if [[ $no_env == "true" ]] ; then
 		env="env -i"
 	fi
@@ -328,14 +332,14 @@ run_test() {
 			printf "\033[1;35m%-4s\033[m" "  $i:	"
 			tmp_line_count=$line_count
 			while [[ $end_of_file == 0 ]] && [[ $line != \#* ]] && [[ $line != "" ]] ; do
-				INPUT+="$line$NL"
+				input+="$line$NL"
 				read -r line
 				end_of_file=$?
 				((line_count++))
 			done
-			echo -n "$INPUT" | eval "$env $valgrind $MINISHELL_PATH/$EXECUTABLE" 2>"$TMP_OUTDIR/tmp_err_minishell" >"$TMP_OUTDIR/tmp_out_minishell"
+			echo -n "$input" | eval "$env $valgrind $MINISHELL_PATH/$EXECUTABLE" 2>"$TMP_OUTDIR/tmp_err_minishell" >"$TMP_OUTDIR/tmp_out_minishell"
 			exit_minishell=$?
-			echo -n "enable -n .$NL$INPUT" | eval "$env bash --posix" 2>"$TMP_OUTDIR/tmp_err_bash" >"$TMP_OUTDIR/tmp_out_bash"
+			echo -n "enable -n .$NL$input" | eval "$env bash --posix" 2>"$TMP_OUTDIR/tmp_err_bash" >"$TMP_OUTDIR/tmp_out_bash"
 			exit_bash=$?
 			echo -ne "\033[1;34mSTD_OUT:\033[m "
 			if [[ $READLINE == "true" ]] ; then
@@ -433,7 +437,7 @@ run_test() {
 					echo -ne "✅ "
 				fi
 			fi
-			INPUT=""
+			input=""
 			((i++))
 			((TEST_COUNT++))
 			echo -e "\033[0;90m$file:$tmp_line_count\033[m  "

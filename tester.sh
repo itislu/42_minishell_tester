@@ -9,7 +9,22 @@ OUTDIR=$MINISHELL_PATH/tester_output
 
 # Get the name of the minishell by running a command that produces an error
 # The name will then be filtered out from error messages
-MINISHELL_NAME=$(echo -n "forcing_error_message" | $MINISHELL_PATH/$EXECUTABLE 2>&1 | head -n 1 | awk -F: '{if ($0 ~ /:/) print $1; else print ""}')
+MINISHELL_NAME=$(echo -n "|" | $MINISHELL_PATH/$EXECUTABLE 2>&1)
+if [[ $(echo -n "$MINISHELL_NAME" | wc -l) -gt 1 ]] ; then
+	MINISHELL_NAME=$(echo -n "$MINISHELL_NAME" | awk 'NR==2')
+	READLINE="true"
+fi
+MINISHELL_NAME=$(echo -n "$MINISHELL_NAME" | awk -F: '{if ($0 ~ /:/) print $1; else print ""}')
+
+# Get the minishell prompt in case it needs to be filtered out because of the use of readline
+if [[ $READLINE == "true" ]] ; then
+	MINISHELL_PROMPT=$(echo -n "everything_before_this_is_the_prompt" | $MINISHELL_PATH/$EXECUTABLE 2>&1 | head -n 1 | sed 's/everything_before_this_is_the_prompt.*//')
+	ESCAPED_PROMPT=$(echo -n "$MINISHELL_PROMPT" | sed 's:[][\/.^$*]:\\&:g')
+fi
+
+# Get the exit message of the minishell in case it needs to be filtered out
+# The exit message should always get printed to stderr, bash does it too (see `exit 2>/dev/null`)
+MINISHELL_EXIT_MSG=$(echo -n "" | $MINISHELL_PATH/$EXECUTABLE 2>&1 | sed "s/^$ESCAPED_PROMPT//")
 
 VALGRIND_FLAGS=(
 	--errors-for-leak-kinds=all
@@ -253,41 +268,45 @@ print_title() {
 }
 
 run_tests() {
-	dir=$1
-	test_leaks=$2
-	no_env=$3
+	local dir=$1
+	local test_leaks=$2
+	local no_env=$3
+	local files
+
 	if [[ $dir == "all" ]] ; then
-		FILES="${RUNDIR}/cmds/**/*.sh"
+		files="${RUNDIR}/cmds/**/*.sh"
 	else
-		FILES="${RUNDIR}/cmds/${dir}/*"
+		files="${RUNDIR}/cmds/${dir}/*"
 	fi
-	for file in $FILES ; do
+	for file in $files ; do
 		run_test "$file" "$test_leaks" "$no_env"
 	done
 }
 
 run_tests_from_file() {
-	file=$1
-	test_leaks=$2
-	no_env=$3
+	local file=$1
+	local test_leaks=$2
+	local no_env=$3
+
 	run_test "$file" "$test_leaks" "$no_env"
 }
 
 run_tests_from_dir() {
-	dir=$1
-	test_leaks=$2
-	no_env=$3
-	FILES="${dir}/*"
-	for file in $FILES ; do
+	local dir=$1
+	local test_leaks=$2
+	local no_env=$3
+	local files="${dir}/*"
+
+	for file in $files ; do
 		run_test "$file" "$test_leaks" "$no_env"
 	done
-
 }
 
 run_test() {
-	file=$1
-	test_leaks=$2
-	no_env=$3
+	local file=$1
+	local test_leaks=$2
+	local no_env=$3
+
 	if [[ $no_env == "true" ]] ; then
 		env="env -i"
 	fi
@@ -313,16 +332,20 @@ run_test() {
 			printf "\033[1;35m%-4s\033[m" "  $i:	"
 			tmp_line_count=$line_count
 			while [[ $end_of_file == 0 ]] && [[ $line != \#* ]] && [[ $line != "" ]] ; do
-				INPUT+="$line$NL"
+				input+="$line$NL"
 				read -r line
 				end_of_file=$?
 				((line_count++))
 			done
-			echo -n "$INPUT" | eval "$env $valgrind $MINISHELL_PATH/$EXECUTABLE" 2>"$TMP_OUTDIR/tmp_err_minishell" >"$TMP_OUTDIR/tmp_out_minishell"
+			echo -n "$input" | eval "$env $valgrind $MINISHELL_PATH/$EXECUTABLE" 2>"$TMP_OUTDIR/tmp_err_minishell" >"$TMP_OUTDIR/tmp_out_minishell"
 			exit_minishell=$?
-			echo -n "enable -n .$NL$INPUT" | eval "$env bash --posix" 2>"$TMP_OUTDIR/tmp_err_bash" >"$TMP_OUTDIR/tmp_out_bash"
+			echo -n "enable -n .$NL$input" | eval "$env bash --posix" 2>"$TMP_OUTDIR/tmp_err_bash" >"$TMP_OUTDIR/tmp_out_bash"
 			exit_bash=$?
 			echo -ne "\033[1;34mSTD_OUT:\033[m "
+			if [[ $READLINE == "true" ]] ; then
+				# Filter out all lines with the minishell prompt from stdout
+				sed -i "/^$ESCAPED_PROMPT/d" "$TMP_OUTDIR/tmp_out_minishell"
+			fi
 			if ! diff -q "$TMP_OUTDIR/tmp_out_minishell" "$TMP_OUTDIR/tmp_out_bash" >/dev/null ; then
 				echo -ne "❌  " | tr '\n' ' '
 				((TEST_KO_OUT++))
@@ -336,17 +359,19 @@ run_test() {
 				((ONE++))
 			fi
 			echo -ne "\033[1;33mSTD_ERR:\033[m "
-			stderr_minishell=$(cat "$TMP_OUTDIR/tmp_err_minishell")
-			stderr_bash=$(cat "$TMP_OUTDIR/tmp_err_bash")
-			if grep -q '^bash: line [0-9]*:' <<< "$stderr_bash" ; then
-				# Normalize bash stderr by removing the program name and line number prefix
-				stderr_bash=$(sed 's/^bash: line [0-9]*:/:/' <<< "$stderr_bash")
-				# Normalize minishell stderr by removing its program name prefix
-				stderr_minishell=$(sed "s/^\\($MINISHELL_NAME: line [0-9]*:\\|$MINISHELL_NAME:\\)/:/" <<< "$stderr_minishell")
-				# Remove the next line after a specific syntax error message in bash stderr
-				stderr_bash=$(sed '/^: syntax error near unexpected token/{n; d}' <<< "$stderr_bash")
+			if [[ -n "$MINISHELL_EXIT_MSG" ]] ; then
+				# Filter out the exit message from stderr
+				sed -i "/^$MINISHELL_EXIT_MSG$/d" "$TMP_OUTDIR/tmp_err_minishell"
 			fi
-			if ! diff -q <(echo "$stderr_minishell") <(echo "$stderr_bash") >/dev/null ; then
+			if grep -q '^bash: line [0-9]*:' "$TMP_OUTDIR/tmp_err_bash" ; then
+				# Normalize bash stderr by removing the program name and line number prefix
+				sed -i 's/^bash: line [0-9]*:/:/' "$TMP_OUTDIR/tmp_err_bash"
+				# Normalize minishell stderr by removing its program name prefix
+				sed -i "s/^\\($MINISHELL_NAME: line [0-9]*:\\|$MINISHELL_NAME:\\)/:/" "$TMP_OUTDIR/tmp_err_minishell"
+				# Remove the next line after a specific syntax error message in bash stderr
+				sed -i '/^: syntax error near unexpected token/{n; d}' "$TMP_OUTDIR/tmp_err_bash"
+			fi
+			if ! diff -q "$TMP_OUTDIR/tmp_err_minishell" "$TMP_OUTDIR/tmp_err_bash" >/dev/null ; then
 				echo -ne "❌  " | tr '\n' ' '
 				((TEST_KO_ERR++))
 				((FAILED++))
@@ -412,7 +437,7 @@ run_test() {
 					echo -ne "✅ "
 				fi
 			fi
-			INPUT=""
+			input=""
 			((i++))
 			((TEST_COUNT++))
 			echo -e "\033[0;90m$file:$tmp_line_count\033[m  "

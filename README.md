@@ -4,6 +4,7 @@
 
 # Updates
 
+- Add support for readline.
 - More rigorous memory leak checks.
 - Memory leak checks in child processes without false positives from external commands.
 - File descriptor leak checks.
@@ -17,55 +18,19 @@
 
 # Menu
 
-[Setup](#setup)
+- [Install & Run](#how-to-install-and-run)
 
-[Install & Run](#how-to-install-and-run)
+- [Usage](#how-to-launch-the-tester)
 
-[Usage](#how-to-launch-the-tester)
+- [CI with GitHub Actions](#continuous-integration-with-github-actions)
 
-[CI with GitHub Actions](#continuous-integration-with-github-actions)
+- [Troubleshooting](#troubleshooting)
 
-[Disclaimer](#disclaimer)
+  - [All my STDOUT tests fail](#all-my-stdout-tests-fail)
 
-[Contributors](#the-people-who-made-this-tester-possible)
+- [Disclaimer](#disclaimer)
 
----
-
-# Setup
-First you should comment out everything what prints to terminal eg "exit" at exit, printf's for debugging etc.
-Then modify your main loop:
-You should only read with readline and use your own prompt when you launch the program by yourself typing ./minishell into the terminal. You can check it this way:
-
-
-```c
-	if (isatty(fileno(stdin)))
-		shell->prompt = readline(shell->terminal_prompt);
-```
-
-Else if it is opened by another program/tester for example then use gnl as follows
-
-```c
-	char *line;
-	line = get_next_line(fileno(stdin));
-	shell->prompt = ft_strtrim(line, "\n");
-	free(line);
-```
-
-So it should look something like this:
-
-```c
-	if (isatty(fileno(stdin)))
-		shell->prompt = readline(shell->terminal_prompt);
-	else
-	{
-		char *line;
-		line = get_next_line(fileno(stdin));
-		shell->prompt = ft_strtrim(line, "\n");
-		free(line);
-	}
-```
-
-I think from this you pretty much can figure it out, it isn't a big change :)
+- [Contributors](#the-people-who-made-this-tester-possible)
 
 ---
 
@@ -144,6 +109,19 @@ mstest -h  # Display the usage instructions
 # Continuous Integration with GitHub Actions
 
 [How to Re-use Our CI/CD Framework For Your Own Minishell](https://github.com/LeaYeh/minishell?tab=readme-ov-file#how-to-re-use-our-cicd-framework-for-your-own-minishell)
+
+---
+
+# Troubleshooting
+
+## All my STDOUT tests fail
+
+  It is because you print your exit message to STDOUT instead of STDERR.
+
+  You can fix this in two ways:
+  - Check in your code if you are in "interactive mode" (`isatty()`) and only print the exit message if you are. This is how bash does it.
+  - Print the exit message to STDERR. In interactive mode, bash does it this way too (try out `exit 2>/dev/null`).<br>
+    For more information, see [here](https://github.com/LeaYeh/minishell/pull/270).
 
 ---
 

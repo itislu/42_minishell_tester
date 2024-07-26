@@ -340,6 +340,7 @@ run_test() {
 	dir_name=$(basename "$(dirname "$file")")
 	file_name=$(basename --suffix=.sh "$file")
 	while [[ $end_of_file == 0 ]] ; do
+		# Read the test input
 		read -r line
 		end_of_file=$?
 		((line_count++))
@@ -357,10 +358,14 @@ run_test() {
 				end_of_file=$?
 				((line_count++))
 			done
+
+			# Run the test
 			echo -n "$input" | eval "$env $valgrind $MINISHELL_PATH/$EXECUTABLE" 2>"$TMP_OUTDIR/tmp_err_minishell" >"$TMP_OUTDIR/tmp_out_minishell"
 			exit_minishell=$?
 			echo -n "enable -n .$NL$input" | eval "$env bash --posix" 2>"$TMP_OUTDIR/tmp_err_bash" >"$TMP_OUTDIR/tmp_out_bash"
 			exit_bash=$?
+
+			# Check stdout
 			echo -ne "\033[1;34mSTD_OUT:\033[m "
 			if [[ $READLINE == "true" ]] ; then
 				# Filter out all lines with the minishell prompt from stdout
@@ -378,6 +383,8 @@ run_test() {
 				((TEST_OK++))
 				((ONE++))
 			fi
+
+			# Check stderr
 			echo -ne "\033[1;33mSTD_ERR:\033[m "
 			if [[ -n "$MINISHELL_EXIT_MSG" ]] ; then
 				# Filter out the exit message from stderr
@@ -403,6 +410,8 @@ run_test() {
 				((TEST_OK++))
 				((TWO++))
 			fi
+
+			# Check exit code
 			echo -ne "\033[1;36mEXIT_CODE:\033[m "
 			if [[ $exit_minishell != $exit_bash ]] ; then
 				echo -ne "❌\033[1;31m [ minishell($exit_minishell)  bash($exit_bash) ]\033[m  " | tr '\n' ' '
@@ -413,6 +422,8 @@ run_test() {
 				((TEST_OK++))
 				((THREE++))
 			fi
+
+			# Check for leaks
 			if [[ $test_leaks == "true" ]] ; then
 				echo -ne "\033[1;36mLEAKS:\033[m "
 				# Get all error summaries
@@ -457,6 +468,8 @@ run_test() {
 					echo -ne "✅ "
 				fi
 			fi
+
+			# Print the file name and line count of the test
 			input=""
 			((i++))
 			((TEST_COUNT++))

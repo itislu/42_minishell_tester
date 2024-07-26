@@ -7,24 +7,27 @@ RUNDIR=$HOME/42_minishell_tester
 TMP_OUTDIR=$RUNDIR/tmp
 OUTDIR=$MINISHELL_PATH/tester_output
 
-# Get the name of the minishell by running a command that produces an error
-# The name will then be filtered out from error messages
-MINISHELL_NAME=$(echo -n "|" | $MINISHELL_PATH/$EXECUTABLE 2>&1)
-if [[ $(echo -n "$MINISHELL_NAME" | wc -l) -gt 1 ]] ; then
-	MINISHELL_NAME=$(echo -n "$MINISHELL_NAME" | awk 'NR==2')
-	READLINE="true"
-fi
-MINISHELL_NAME=$(echo -n "$MINISHELL_NAME" | awk -F: '{if ($0 ~ /:/) print $1; else print ""}')
+# Test how minishell behaves to adjust the output filters to it
+adjust_to_minishell() {
+	# Get the name of the minishell by running a command that produces an error
+	# The name will then be filtered out from error messages
+	MINISHELL_NAME=$(echo -n "|" | $MINISHELL_PATH/$EXECUTABLE 2>&1)
+	if [[ $(echo -n "$MINISHELL_NAME" | wc -l) -gt 1 ]] ; then
+		MINISHELL_NAME=$(echo -n "$MINISHELL_NAME" | awk 'NR==2')
+		READLINE="true"
+	fi
+	MINISHELL_NAME=$(echo -n "$MINISHELL_NAME" | awk -F: '{if ($0 ~ /:/) print $1; else print ""}')
 
-# Get the minishell prompt in case it needs to be filtered out because of the use of readline
-if [[ $READLINE == "true" ]] ; then
-	MINISHELL_PROMPT=$(echo -n "everything_before_this_is_the_prompt" | $MINISHELL_PATH/$EXECUTABLE 2>&1 | head -n 1 | sed 's/everything_before_this_is_the_prompt.*//')
-	ESCAPED_PROMPT=$(echo -n "$MINISHELL_PROMPT" | sed 's:[][\/.^$*]:\\&:g')
-fi
+	# Get the minishell prompt in case it needs to be filtered out because of the use of readline
+	if [[ $READLINE == "true" ]] ; then
+		MINISHELL_PROMPT=$(echo -n "everything_before_this_is_the_prompt" | $MINISHELL_PATH/$EXECUTABLE 2>&1 | head -n 1 | sed 's/everything_before_this_is_the_prompt.*//')
+		ESCAPED_PROMPT=$(echo -n "$MINISHELL_PROMPT" | sed 's:[][\/.^$*]:\\&:g')
+	fi
 
-# Get the exit message of the minishell in case it needs to be filtered out
-# The exit message should always get printed to stderr, bash does it too (see `exit 2>/dev/null`)
-MINISHELL_EXIT_MSG=$(echo -n "" | $MINISHELL_PATH/$EXECUTABLE 2>&1 | sed "s/^$ESCAPED_PROMPT//")
+	# Get the exit message of the minishell in case it needs to be filtered out
+	# The exit message should always get printed to stderr, bash does it too (see `exit 2>/dev/null`)
+	MINISHELL_EXIT_MSG=$(echo -n "" | $MINISHELL_PATH/$EXECUTABLE 2>&1 | sed "s/^$ESCAPED_PROMPT//")
+}
 
 VALGRIND_FLAGS=(
 	--errors-for-leak-kinds=all
@@ -83,6 +86,8 @@ main() {
 		print_usage
 		exit 0
 	fi
+
+	adjust_to_minishell
 
 	if [[ -d $OUTDIR ]] ; then
 		mv "$OUTDIR" "${OUTDIR}_$(date +%Y-%m-%d_%H.%M.%S)"

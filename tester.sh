@@ -4,7 +4,7 @@
 export MINISHELL_PATH=./
 export EXECUTABLE=minishell
 RUNDIR=$HOME/42_minishell_tester
-TMP_OUTDIR=/tmp/minishell_tester
+TMP_OUTDIR=$RUNDIR/tmp
 OUTDIR=$MINISHELL_PATH/tester_output
 
 # Get the name of the minishell by running a command that produces an error

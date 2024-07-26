@@ -84,6 +84,9 @@ main() {
 		exit 0
 	fi
 
+	if [[ -d $OUTDIR ]] ; then
+		mv "$OUTDIR" "${OUTDIR}_$(date +%Y-%m-%d_%H.%M.%S)"
+	fi
 	mkdir -p "$TMP_OUTDIR"
 	process_tests "$@"
 

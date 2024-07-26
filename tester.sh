@@ -62,12 +62,19 @@ main() {
 	process_options "$@"
 
 	if [[ ! -f $MINISHELL_PATH/$EXECUTABLE ]] ; then
-		echo -e "\033[1;31m# **************************************************************************** #"
+		echo -e "\033[1;33m# **************************************************************************** #"
 		echo "#                            MINISHELL NOT COMPILED                            #"
 		echo "#                              TRY TO COMPILE ...                              #"
 		echo -e "# **************************************************************************** #\033[m"
-		make -C $MINISHELL_PATH
-		if [[ ! -f $MINISHELL_PATH/$EXECUTABLE ]] ; then
+		if ! make -C $MINISHELL_PATH || [[ ! -f $MINISHELL_PATH/$EXECUTABLE ]] ; then
+			echo -e "\033[1;31mCOMPILING FAILED\033[m" && exit 1
+		fi
+	elif [[ $(make --question -C $MINISHELL_PATH) != 0 ]] ; then
+		echo -e "\033[1;33m# **************************************************************************** #"
+		echo "#                           MINISHELL NOT UP TO DATE                           #"
+		echo "#                              TRY TO COMPILE ...                              #"
+		echo -e "# **************************************************************************** #\033[m"
+		if ! make -C $MINISHELL_PATH ; then
 			echo -e "\033[1;31mCOMPILING FAILED\033[m" && exit 1
 		fi
 	fi
@@ -398,7 +405,7 @@ run_test() {
 				echo -ne "\033[1;36mLEAKS:\033[m "
 				# Get all error summaries
 				error_summaries=$(cat "$TMP_OUTDIR/tmp_valgrind_out" | grep -a "ERROR SUMMARY:" | awk '{print $4}')
-				IFS=$'\n' read -rd '' -a error_summaries_array <<<"$error_summaries"
+				IFS=$'\n' read -rd '' -a error_summaries_array <<< "$error_summaries"
 				# Check if any error summary is not 0
 				leak_found=0
 				for error_summary in "${error_summaries_array[@]}" ; do

@@ -56,6 +56,9 @@ GOOD_TEST=0
 LEAKS=0
 
 main() {
+	trap sigint_trap SIGINT
+	trap cleanup EXIT
+
 	process_options "$@"
 
 	if [[ ! -f $MINISHELL_PATH/$EXECUTABLE ]] ; then
@@ -80,8 +83,6 @@ main() {
 	if [[ $TEST_COUNT -gt 0 ]] ; then
 		print_stats
 	fi
-	rm -rf test
-	rm -rf "$TMP_OUTDIR" 2>/dev/null
 
 	if [ "$GITHUB_ACTIONS" == "true" ] ; then
 		echo "$GH_BRANCH=$FAILED" >> "$GITHUB_ENV"
@@ -492,6 +493,15 @@ print_stats() {
 	echo -e "\033[1;31m                                     ❌ $FAILED \033[m  "
 	echo -ne "\033[1;32m                                     ✅ $TEST_OK \033[m  "
 	echo ""
+}
+
+cleanup() {
+	rm -rf "$TMP_OUTDIR" 2>/dev/null
+}
+
+sigint_trap() {
+	cleanup
+	exit 130
 }
 
 # Start the tester

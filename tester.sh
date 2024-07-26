@@ -4,34 +4,38 @@
 export MINISHELL_PATH=./
 export EXECUTABLE=minishell
 RUNDIR=$HOME/42_minishell_tester
-TMP_OUTDIR=/tmp/minishell_tester
-OUTDIR=$MINISHELL_PATH/tester_output
+DATE=$(date +%Y-%m-%d_%H.%M.%S)
+TMP_OUTDIR=$RUNDIR/tmp_$DATE
+OUTDIR=$MINISHELL_PATH/tester_output_$DATE
 
-# Get the name of the minishell by running a command that produces an error
-# The name will then be filtered out from error messages
-MINISHELL_NAME=$(echo -n "|" | $MINISHELL_PATH/$EXECUTABLE 2>&1)
-if [[ $(echo -n "$MINISHELL_NAME" | wc -l) -gt 1 ]] ; then
-	MINISHELL_NAME=$(echo -n "$MINISHELL_NAME" | awk 'NR==2')
-	READLINE="true"
-fi
-MINISHELL_NAME=$(echo -n "$MINISHELL_NAME" | awk -F: '{if ($0 ~ /:/) print $1; else print ""}')
+# Test how minishell behaves to adjust the output filters to it
+adjust_to_minishell() {
+	# Get the name of the minishell by running a command that produces an error
+	# The name will then be filtered out from error messages
+	MINISHELL_NAME=$(echo -n "|" | $MINISHELL_PATH/$EXECUTABLE 2>&1)
+	if [[ $(echo -n "$MINISHELL_NAME" | wc -l) -gt 1 ]] ; then
+		MINISHELL_NAME=$(echo -n "$MINISHELL_NAME" | awk 'NR==2')
+		READLINE="true"
+	fi
+	MINISHELL_NAME=$(echo -n "$MINISHELL_NAME" | awk -F: '{if ($0 ~ /:/) print $1; else print ""}')
 
-# Get the minishell prompt in case it needs to be filtered out because of the use of readline
-if [[ $READLINE == "true" ]] ; then
-	MINISHELL_PROMPT=$(echo -n "everything_before_this_is_the_prompt" | $MINISHELL_PATH/$EXECUTABLE 2>&1 | head -n 1 | sed 's/everything_before_this_is_the_prompt.*//')
-	ESCAPED_PROMPT=$(echo -n "$MINISHELL_PROMPT" | sed 's:[][\/.^$*]:\\&:g')
-fi
+	# Get the minishell prompt in case it needs to be filtered out because of the use of readline
+	if [[ $READLINE == "true" ]] ; then
+		MINISHELL_PROMPT=$(echo -n "everything_before_this_is_the_prompt" | $MINISHELL_PATH/$EXECUTABLE 2>&1 | head -n 1 | sed 's/everything_before_this_is_the_prompt.*//')
+		ESCAPED_PROMPT=$(echo -n "$MINISHELL_PROMPT" | sed 's:[][\/.^$*]:\\&:g')
+	fi
 
-# Get the exit message of the minishell in case it needs to be filtered out
-# The exit message should always get printed to stderr, bash does it too (see `exit 2>/dev/null`)
-MINISHELL_EXIT_MSG=$(echo -n "" | $MINISHELL_PATH/$EXECUTABLE 2>&1 | sed "s/^$ESCAPED_PROMPT//")
+	# Get the exit message of the minishell in case it needs to be filtered out
+	# The exit message should always get printed to stderr, bash does it too (see `exit 2>/dev/null`)
+	MINISHELL_EXIT_MSG=$(echo -n "" | $MINISHELL_PATH/$EXECUTABLE 2>&1 | sed "s/^$ESCAPED_PROMPT//")
+}
 
 VALGRIND_FLAGS=(
 	--errors-for-leak-kinds=all
 	--leak-check=full
 	--show-error-list=yes
 	--show-leak-kinds=all
-	--suppressions="$MINISHELL_PATH"/minishell.supp
+	--suppressions="$RUNDIR/utils/minishell.supp"
 	--trace-children=yes
 	--trace-children-skip="$(echo /bin/* /usr/bin/* /usr/sbin/* $(which norminette) | tr ' ' ',')"
 	--track-fds=all
@@ -56,15 +60,25 @@ GOOD_TEST=0
 LEAKS=0
 
 main() {
+	trap sigint_trap SIGINT
+	trap cleanup EXIT
+
 	process_options "$@"
 
 	if [[ ! -f $MINISHELL_PATH/$EXECUTABLE ]] ; then
-		echo -e "\033[1;31m# **************************************************************************** #"
+		echo -e "\033[1;33m# **************************************************************************** #"
 		echo "#                            MINISHELL NOT COMPILED                            #"
 		echo "#                              TRY TO COMPILE ...                              #"
 		echo -e "# **************************************************************************** #\033[m"
-		make -C $MINISHELL_PATH
-		if [[ ! -f $MINISHELL_PATH/$EXECUTABLE ]] ; then
+		if ! make -C $MINISHELL_PATH || [[ ! -f $MINISHELL_PATH/$EXECUTABLE ]] ; then
+			echo -e "\033[1;31mCOMPILING FAILED\033[m" && exit 1
+		fi
+	elif ! make --question -C $MINISHELL_PATH ; then
+		echo -e "\033[1;33m# **************************************************************************** #"
+		echo "#                           MINISHELL NOT UP TO DATE                           #"
+		echo "#                              TRY TO COMPILE ...                              #"
+		echo -e "# **************************************************************************** #\033[m"
+		if ! make -C $MINISHELL_PATH ; then
 			echo -e "\033[1;31mCOMPILING FAILED\033[m" && exit 1
 		fi
 	fi
@@ -74,14 +88,14 @@ main() {
 		exit 0
 	fi
 
+	adjust_to_minishell
+
 	mkdir -p "$TMP_OUTDIR"
 	process_tests "$@"
 
 	if [[ $TEST_COUNT -gt 0 ]] ; then
 		print_stats
 	fi
-	rm -rf test
-	rm -rf "$TMP_OUTDIR" 2>/dev/null
 
 	if [ "$GITHUB_ACTIONS" == "true" ] ; then
 		echo "$GH_BRANCH=$FAILED" >> "$GITHUB_ENV"
@@ -397,7 +411,7 @@ run_test() {
 				echo -ne "\033[1;36mLEAKS:\033[m "
 				# Get all error summaries
 				error_summaries=$(cat "$TMP_OUTDIR/tmp_valgrind_out" | grep -a "ERROR SUMMARY:" | awk '{print $4}')
-				IFS=$'\n' read -rd '' -a error_summaries_array <<<"$error_summaries"
+				IFS=$'\n' read -rd '' -a error_summaries_array <<< "$error_summaries"
 				# Check if any error summary is not 0
 				leak_found=0
 				for error_summary in "${error_summaries_array[@]}" ; do
@@ -492,6 +506,15 @@ print_stats() {
 	echo -e "\033[1;31m                                     ❌ $FAILED \033[m  "
 	echo -ne "\033[1;32m                                     ✅ $TEST_OK \033[m  "
 	echo ""
+}
+
+cleanup() {
+	rm -rf "$TMP_OUTDIR" 2>/dev/null
+}
+
+sigint_trap() {
+	cleanup
+	exit 130
 }
 
 # Start the tester

@@ -123,6 +123,7 @@ print_usage() {
 	echo -e "  #   a                      Run all tests                                       #"
 	echo -e "  #   va                     Run all tests with memory leak checks               #"
 	echo -e "  #   -l|--leaks             Enable memory leak checks                           #"
+	echo -e "  #      --no-std-fds        Don't report fd leaks of stdin, stdout, and stderr  #"
 	echo -e "  #   -n|--no-env            Disable environment                                 #"
 	echo -e "  #   -f|--file <file>       Run tests specified in a file                       #"
 	echo -e "  #      --dir <directory>   Run tests specified in a directory                  #"
@@ -135,6 +136,10 @@ process_options() {
 		case $1 in
 			-l|--leaks)
 				TEST_LEAKS="true"
+				shift
+				;;
+			--no-std-fds)
+				VALGRIND="${VALGRIND/--track-fds=all/--track-fds=yes}"
 				shift
 				;;
 			-n|--no-env)

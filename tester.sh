@@ -100,7 +100,7 @@ main() {
 		print_stats
 	fi
 
-	if [ "$GITHUB_ACTIONS" == "true" ] ; then
+	if [[ "$GITHUB_ACTIONS" == "true" ]] ; then
 		echo "$GH_BRANCH=$FAILED" >> "$GITHUB_ENV"
 	fi
 
@@ -439,7 +439,7 @@ run_test() {
 				# Check if any error summary is not 0
 				leak_found=0
 				for error_summary in "${error_summaries_array[@]}" ; do
-					if [ -n "$error_summary" ] && [ "$error_summary" -ne 0 ] ; then
+					if [[ -n "$error_summary" ]] && [[ "$error_summary" -ne 0 ]] ; then
 						leak_found=1
 						break
 					fi
@@ -463,10 +463,10 @@ run_test() {
 						}
 					' "$TMP_OUTDIR/tmp_valgrind_out"
 				)
-				if [ -n "$open_file_descriptors" ] ; then
+				if [[ -n "$open_file_descriptors" ]] ; then
 					leak_found=1
 				fi
-				if [ "$leak_found" -ne 0 ] ; then
+				if [[ "$leak_found" -ne 0 ]] ; then
 					echo -ne "❌ "
 					((LEAKS++))
 					mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null

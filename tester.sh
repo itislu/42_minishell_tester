@@ -30,6 +30,7 @@ adjust_to_minishell() {
 	MINISHELL_EXIT_MSG=$(echo -n "" | $MINISHELL_PATH/$EXECUTABLE 2>&1 | sed "s/^$ESCAPED_PROMPT//")
 }
 
+export PATH="/bin:/usr/bin:/usr/sbin:$PATH"
 VALGRIND_FLAGS=(
 	--errors-for-leak-kinds=all
 	--leak-check=full

@@ -246,7 +246,7 @@ ls
 
 unset PATH
 cd /bin/../bin/../bin/../bin/../bin/../bin/../bin/../bin/
-../bin/../bin/ls
+../bin/../bin/basename $PWD
 
 unset PATH
 cd /bin/

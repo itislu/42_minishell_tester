@@ -10,24 +10,26 @@ OUTDIR=$MINISHELL_PATH/tester_output_$DATE
 
 # Test how minishell behaves to adjust the output filters to it
 adjust_to_minishell() {
-	# Get the name of the minishell by running a command that produces an error
-	# The name will then be filtered out from error messages
-	MINISHELL_NAME=$(echo -n "|" | $MINISHELL_PATH/$EXECUTABLE 2>&1)
-	if [[ $(echo -n "$MINISHELL_NAME" | wc -l) -gt 1 ]] ; then
-		MINISHELL_NAME=$(echo -n "$MINISHELL_NAME" | awk 'NR==2')
+	# Get the prompt of the minishell in case it needs to be filtered out
+	MINISHELL_PROMPT=$(echo -n "" | $MINISHELL_PATH/$EXECUTABLE 2>/dev/null | tail -n 1)
+	# Escape special characters
+	MINISHELL_PROMPT=$(echo -n "$MINISHELL_PROMPT" | sed 's:[][\/.^$*]:\\&:g')
+
+	# Check if a command gives as the first line of output exactly the prompt with the input
+	# If it does, the minishell uses readline
+	if echo -n "this_is_the_input" | $MINISHELL_PATH/$EXECUTABLE 2>/dev/null | head -n 1 | grep -q "^${MINISHELL_PROMPT}this_is_the_input$" ; then
 		READLINE="true"
 	fi
-	MINISHELL_NAME=$(echo -n "$MINISHELL_NAME" | awk -F: '{if ($0 ~ /:/) print $1; else print ""}')
 
-	# Get the minishell prompt in case it needs to be filtered out because of the use of readline
-	if [[ $READLINE == "true" ]] ; then
-		MINISHELL_PROMPT=$(echo -n "everything_before_this_is_the_prompt" | $MINISHELL_PATH/$EXECUTABLE 2>&1 | head -n 1 | sed 's/everything_before_this_is_the_prompt.*//')
-		ESCAPED_PROMPT=$(echo -n "$MINISHELL_PROMPT" | sed 's:[][\/.^$*]:\\&:g')
-	fi
+	# Get the name of the minishell by running a command that produces an error
+	# The name will then be filtered out from error messages
+	MINISHELL_ERR_NAME=$(echo -n "|" | $MINISHELL_PATH/$EXECUTABLE 2>&1 >/dev/null | awk -F: '{if ($0 ~ /:/) print $1; else print ""}')
+	MINISHELL_ERR_NAME=$(echo -n "$MINISHELL_ERR_NAME" | sed 's:[][\/.^$*]:\\&:g')
 
 	# Get the exit message of the minishell in case it needs to be filtered out
 	# The exit message should always get printed to stderr, bash does it too (see `exit 2>/dev/null`)
-	MINISHELL_EXIT_MSG=$(echo -n "" | $MINISHELL_PATH/$EXECUTABLE 2>&1 | sed "s/^$ESCAPED_PROMPT//")
+	MINISHELL_EXIT_MSG=$(echo -n "" | $MINISHELL_PATH/$EXECUTABLE 2>&1 >/dev/null | tail -n 1)
+	MINISHELL_EXIT_MSG=$(echo -n "$MINISHELL_EXIT_MSG" | sed 's:[][\/.^$*]:\\&:g')
 }
 
 export PATH="/bin:/usr/bin:/usr/sbin:$PATH"
@@ -98,7 +100,7 @@ main() {
 		print_stats
 	fi
 
-	if [ "$GITHUB_ACTIONS" == "true" ] ; then
+	if [[ "$GITHUB_ACTIONS" == "true" ]] ; then
 		echo "$GH_BRANCH=$FAILED" >> "$GITHUB_ENV"
 	fi
 
@@ -340,6 +342,7 @@ run_test() {
 	dir_name=$(basename "$(dirname "$file")")
 	file_name=$(basename --suffix=.sh "$file")
 	while [[ $end_of_file == 0 ]] ; do
+		# Read the test input
 		read -r line
 		end_of_file=$?
 		((line_count++))
@@ -357,14 +360,23 @@ run_test() {
 				end_of_file=$?
 				((line_count++))
 			done
+
+			# Run the test
 			echo -n "$input" | eval "$env $valgrind $MINISHELL_PATH/$EXECUTABLE" 2>"$TMP_OUTDIR/tmp_err_minishell" >"$TMP_OUTDIR/tmp_out_minishell"
 			exit_minishell=$?
 			echo -n "enable -n .$NL$input" | eval "$env bash --posix" 2>"$TMP_OUTDIR/tmp_err_bash" >"$TMP_OUTDIR/tmp_out_bash"
 			exit_bash=$?
+
+			# Check stdout
 			echo -ne "\033[1;34mSTD_OUT:\033[m "
-			if [[ $READLINE == "true" ]] ; then
-				# Filter out all lines with the minishell prompt from stdout
-				sed -i "/^$ESCAPED_PROMPT/d" "$TMP_OUTDIR/tmp_out_minishell"
+			if [[ -n "$MINISHELL_PROMPT" ]] ; then
+				if [[ $READLINE == "true" ]] ; then
+					# Filter out the prompt line of readline from stdout
+					sed -i "/^$MINISHELL_PROMPT/d" "$TMP_OUTDIR/tmp_out_minishell"
+				else
+					# Filter out the prompt from stdout
+					sed -i "s/^$MINISHELL_PROMPT//" "$TMP_OUTDIR/tmp_out_minishell"
+				fi
 			fi
 			if ! diff -q "$TMP_OUTDIR/tmp_out_minishell" "$TMP_OUTDIR/tmp_out_bash" >/dev/null ; then
 				echo -ne "❌  " | tr '\n' ' '
@@ -378,6 +390,8 @@ run_test() {
 				((TEST_OK++))
 				((ONE++))
 			fi
+
+			# Check stderr
 			echo -ne "\033[1;33mSTD_ERR:\033[m "
 			if [[ -n "$MINISHELL_EXIT_MSG" ]] ; then
 				# Filter out the exit message from stderr
@@ -387,7 +401,7 @@ run_test() {
 				# Normalize bash stderr by removing the program name and line number prefix
 				sed -i 's/^bash: line [0-9]*:/:/' "$TMP_OUTDIR/tmp_err_bash"
 				# Normalize minishell stderr by removing its program name prefix
-				sed -i "s/^\\($MINISHELL_NAME: line [0-9]*:\\|$MINISHELL_NAME:\\)/:/" "$TMP_OUTDIR/tmp_err_minishell"
+				sed -i "s/^\\($MINISHELL_ERR_NAME: line [0-9]*:\\|$MINISHELL_ERR_NAME:\\)/:/" "$TMP_OUTDIR/tmp_err_minishell"
 				# Remove the next line after a specific syntax error message in bash stderr
 				sed -i '/^: syntax error near unexpected token/{n; d}' "$TMP_OUTDIR/tmp_err_bash"
 			fi
@@ -403,6 +417,8 @@ run_test() {
 				((TEST_OK++))
 				((TWO++))
 			fi
+
+			# Check exit code
 			echo -ne "\033[1;36mEXIT_CODE:\033[m "
 			if [[ $exit_minishell != $exit_bash ]] ; then
 				echo -ne "❌\033[1;31m [ minishell($exit_minishell)  bash($exit_bash) ]\033[m  " | tr '\n' ' '
@@ -413,6 +429,8 @@ run_test() {
 				((TEST_OK++))
 				((THREE++))
 			fi
+
+			# Check for leaks
 			if [[ $test_leaks == "true" ]] ; then
 				echo -ne "\033[1;36mLEAKS:\033[m "
 				# Get all error summaries
@@ -421,7 +439,7 @@ run_test() {
 				# Check if any error summary is not 0
 				leak_found=0
 				for error_summary in "${error_summaries_array[@]}" ; do
-					if [ -n "$error_summary" ] && [ "$error_summary" -ne 0 ] ; then
+					if [[ -n "$error_summary" ]] && [[ "$error_summary" -ne 0 ]] ; then
 						leak_found=1
 						break
 					fi
@@ -445,10 +463,10 @@ run_test() {
 						}
 					' "$TMP_OUTDIR/tmp_valgrind_out"
 				)
-				if [ -n "$open_file_descriptors" ] ; then
+				if [[ -n "$open_file_descriptors" ]] ; then
 					leak_found=1
 				fi
-				if [ "$leak_found" -ne 0 ] ; then
+				if [[ "$leak_found" -ne 0 ]] ; then
 					echo -ne "❌ "
 					((LEAKS++))
 					mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null
@@ -457,6 +475,8 @@ run_test() {
 					echo -ne "✅ "
 				fi
 			fi
+
+			# Print the file name and line count of the test
 			input=""
 			((i++))
 			((TEST_COUNT++))

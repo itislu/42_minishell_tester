@@ -44,8 +44,8 @@ cd $HOME
 /bin/ls
 
 cd /bin/
-./ls
-ls
+./basename $PWD
+basename $PWD
 
 export T=bazd
 echo "$T" "meg"

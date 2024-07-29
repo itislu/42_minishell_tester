@@ -7,3 +7,5 @@ $notexists | ls | $notexists
 $notexists
 
 $notexists echo "haha"
+
+> $notexists echo "haha"

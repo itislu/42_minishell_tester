@@ -9,3 +9,6 @@ $notexists
 $notexists echo "haha"
 
 > $notexists echo "haha"
+
+export A="haha         123"
+echo $A

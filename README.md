@@ -71,16 +71,16 @@ mstest b  # Run bonus tests
 mstest vb  # Run bonus tests with memory leak checks
 ```
 ```
-mstest ne  # Run tests without environment
+mstest ne  # Run empty environment tests
 ```
 ```
-mstest vne  # Run tests without environment with memory leak checks
+mstest vne  # Run empty environment tests with memory leak checks
 ```
 ```
-mstest d  # Run death tests
+mstest d  # Run death tests (hardcore)
 ```
 ```
-mstest vd  # Run death tests with memory leak checks
+mstest vd  # Run death tests with memory leak checks (hardcore)
 ```
 ```
 mstest a  # Run all tests
@@ -89,10 +89,13 @@ mstest a  # Run all tests
 mstest va  # Run all tests with memory leak checks
 ```
 ```
-mstest -l  # Enable memory leak checks for any of the above tests
+mstest -l  # Enable memory leak checks for any test
 ```
 ```
-mstest -n  # Disable environment for any of the above tests
+mstest --no-std-fds  # Don't report fd leaks of stdin, stdout, and stderr for any test
+```
+```
+mstest -n  # Run any test with an empty environment
 ```
 ```
 mstest -f <file>  # Run tests specified in a file

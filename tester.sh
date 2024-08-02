@@ -362,8 +362,9 @@ run_test() {
 			done
 
 			# Run the test
-			echo -n "$input" | eval "$env $valgrind $MINISHELL_PATH/$EXECUTABLE" 2>"$TMP_OUTDIR/tmp_err_minishell" >"$TMP_OUTDIR/tmp_out_minishell"
+			echo -n "$input" | eval "$env $MINISHELL_PATH/$EXECUTABLE" 2>"$TMP_OUTDIR/tmp_err_minishell" >"$TMP_OUTDIR/tmp_out_minishell"
 			exit_minishell=$?
+			echo -n "$input" | eval "$env $valgrind $MINISHELL_PATH/$EXECUTABLE" 2>"/dev/null" >"/dev/null"
 			echo -n "enable -n .$NL$input" | eval "$env bash --posix" 2>"$TMP_OUTDIR/tmp_err_bash" >"$TMP_OUTDIR/tmp_out_bash"
 			exit_bash=$?
 

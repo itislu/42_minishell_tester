@@ -118,7 +118,8 @@ main() {
 update_tester() {
 	cd "$RUNDIR" || return 1
 	if git rev-parse --is-inside-work-tree >/dev/null 2>&1 ; then
-		git pull 2>/dev/null | head -n 1 | grep -q "Already up to date." || { echo "Tester updated" && cd - >/dev/null && exec "$0" "${SCRIPT_ARGS[@]}" ; exit ; }
+		echo "Checking for updates..."
+		git pull 2>/dev/null | head -n 1 | grep "Already up to date." || { echo "Tester updated" && cd - >/dev/null && exec "$0" "${SCRIPT_ARGS[@]}" ; exit ; }
 	fi
 	cd - >/dev/null
 }

@@ -1,10 +1,11 @@
 #!/bin/bash
 
-rm -rf $HOME/42_minishell_tester
+cd
+rm -rf "$HOME/42_minishell_tester"
+git clone https://github.com/LeaYeh/42_minishell_tester.git "$HOME/42_minishell_tester"
+cd -
 
-git clone https://github.com/LeaYeh/42_minishell_tester.git $HOME/42_minishell_tester
-
-chmod +x $HOME/42_minishell_tester/tester.sh
+chmod +x "$HOME/42_minishell_tester/tester.sh"
 
 # List of rc files to update
 RC_FILES=("$HOME/.bashrc" "$HOME/.zshrc")

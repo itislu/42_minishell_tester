@@ -62,11 +62,15 @@ THREE=0
 GOOD_TEST=0
 LEAKS=0
 
+SCRIPT_ARGS=("$@")
+
 main() {
 	trap sigint_trap SIGINT
 	trap cleanup EXIT
 
 	process_options "$@"
+
+	update_tester
 
 	if [[ ! -f $MINISHELL_PATH/$EXECUTABLE ]] ; then
 		echo -e "\033[1;33m# **************************************************************************** #"
@@ -109,6 +113,15 @@ main() {
 	else
 		exit 0
 	fi
+}
+
+update_tester() {
+	cd "$RUNDIR" || return 1
+	if git rev-parse --is-inside-work-tree >/dev/null 2>&1 ; then
+		echo "Checking for updates..."
+		git pull 2>/dev/null | head -n 1 | grep "Already up to date." || { echo "Tester updated" && cd - >/dev/null && exec "$0" "${SCRIPT_ARGS[@]}" ; exit ; }
+	fi
+	cd - >/dev/null
 }
 
 print_usage() {

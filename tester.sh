@@ -398,7 +398,7 @@ run_test() {
 		read -r line
 		end_of_file=$?
 		((line_count++))
-		if [[ $line == \#* ]] || [[ $line == "" ]] ; then
+		if [[ $line == "#"* ]] || [[ $line == "" ]] ; then
 			if [[ $line == "#"[[:blank:]]*[[:blank:]]"#" ]] ; then
 				echo -e "\033[1;33m		$line\033[m" | tr '\t' '    '
 			fi
@@ -406,7 +406,7 @@ run_test() {
 		else
 			printf "\033[1;35m%-4s\033[m" "  $i:	"
 			tmp_line_count=$line_count
-			while [[ $end_of_file == 0 ]] && [[ $line != \#* ]] && [[ $line != "" ]] ; do
+			while [[ $end_of_file == 0 ]] && [[ $line != "#"* ]] && [[ $line != "" ]] ; do
 				input+="$line$NL"
 				read -r line
 				end_of_file=$?

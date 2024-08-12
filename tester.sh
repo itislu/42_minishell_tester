@@ -415,7 +415,7 @@ run_test() {
 
 			# Run the test
 			if [[ $test_leaks == "true" ]] ; then
-				echo -n "$input" | eval "$env $valgrind $MINISHELL_PATH/$EXECUTABLE" 2>/dev/null >/dev/null
+				echo -n "$input" | eval "$env $valgrind $MINISHELL_PATH/$EXECUTABLE" &>/dev/null
 			fi
 			echo -n "$input" | eval "$env $MINISHELL_PATH/$EXECUTABLE" 2>"$TMP_OUTDIR/tmp_err_minishell" >"$TMP_OUTDIR/tmp_out_minishell"
 			exit_minishell=$?

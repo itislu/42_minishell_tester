@@ -66,15 +66,12 @@ NL=$'\n'
 TAB=$'\t'
 
 TEST_COUNT=0
-TEST_KO_OUT=0
-TEST_KO_ERR=0
-TEST_KO_EXIT=0
-TEST_OK=0
-FAILED=0
-ONE=0
-TWO=0
-THREE=0
-GOOD_TEST=0
+TESTS_OK=0
+TESTS_KO=0
+TESTS_KO_OUT=0
+TESTS_KO_ERR=0
+TESTS_KO_EXIT=0
+TESTS_PASSED=0
 CRASHES=0
 LEAKS=0
 
@@ -124,7 +121,7 @@ main() {
 	fi
 
 	if [[ "$GITHUB_ACTIONS" == "true" ]] ; then
-		echo "$GH_BRANCH=$FAILED" >> "$GITHUB_ENV"
+		echo "$GH_BRANCH=$TESTS_KO" >> "$GITHUB_ENV"
 	fi
 
 	if [[ $LEAKS -ne 0 || $CRASHES -ne 0 ]] ; then
@@ -498,6 +495,7 @@ run_test() {
 		else
 			printf "\033[1;35m%-4s\033[m" "  $i:	"
 			tmp_line_count=$line_count
+			failed=0
 			while [[ $end_of_file == 0 ]] && [[ $line != "#"* ]] && [[ $line != "" ]] ; do
 				input+="$line$NL"
 				read -r line
@@ -530,15 +528,14 @@ run_test() {
 				fi
 				if ! diff -q "$TMP_OUTDIR/tmp_out_minishell" "$TMP_OUTDIR/tmp_out_bash" >/dev/null ; then
 					echo -ne "❌  " | tr '\n' ' '
-					((TEST_KO_OUT++))
-					((FAILED++))
+					((TESTS_KO_OUT++))
+					((failed++))
 					mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null
 					mv "$TMP_OUTDIR/tmp_out_minishell" "$OUTDIR/$dir_name/$file_name/${i}_stdout_minishell" 2>/dev/null
 					mv "$TMP_OUTDIR/tmp_out_bash" "$OUTDIR/$dir_name/$file_name/${i}_stdout_bash" 2>/dev/null
 				else
 					echo -ne "✅  "
-					((TEST_OK++))
-					((ONE++))
+					((TESTS_OK++))
 				fi
 			fi
 
@@ -559,15 +556,14 @@ run_test() {
 				fi
 				if ! diff -q "$TMP_OUTDIR/tmp_err_minishell" "$TMP_OUTDIR/tmp_err_bash" >/dev/null ; then
 					echo -ne "❌  " | tr '\n' ' '
-					((TEST_KO_ERR++))
-					((FAILED++))
+					((TESTS_KO_ERR++))
+					((failed++))
 					mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null
 					mv "$TMP_OUTDIR/tmp_err_minishell" "$OUTDIR/$dir_name/$file_name/${i}_stderr_minishell" 2>/dev/null
 					mv "$TMP_OUTDIR/tmp_err_bash" "$OUTDIR/$dir_name/$file_name/${i}_stderr_bash" 2>/dev/null
 				else
 					echo -ne "✅  "
-					((TEST_OK++))
-					((TWO++))
+					((TESTS_OK++))
 				fi
 			fi
 
@@ -576,12 +572,11 @@ run_test() {
 				echo -ne "\033[1;36mEXIT_CODE:\033[m "
 				if [[ $exit_minishell != $exit_bash ]] ; then
 					echo -ne "❌\033[1;31m [ minishell($exit_minishell) bash($exit_bash) ]\033[m  " | tr '\n' ' '
-					((TEST_KO_EXIT++))
-					((FAILED++))
+					((TESTS_KO_EXIT++))
+					((failed++))
 				else
 					echo -ne "✅  "
-					((TEST_OK++))
-					((THREE++))
+					((TESTS_OK++))
 				fi
 			fi
 
@@ -600,9 +595,8 @@ run_test() {
 				esac
 				if [[ -n $crash_type ]] ; then
 					echo -ne "❌\033[1;31m [ $crash_type ]\033[m  " | tr '\n' ' '
-					((TEST_KO_CRASH++))
-					((FAILED++))
 					((CRASHES++))
+					((failed++))
 				else
 					echo -ne "✅  "
 				fi
@@ -659,15 +653,10 @@ run_test() {
 			((i++))
 			((TEST_COUNT++))
 			echo -e "\033[0;90m$file:$tmp_line_count\033[m  "
-			if [[ $ONE == 1 && $TWO == 1 && $THREE == 1 ]] ; then
-				((GOOD_TEST++))
-				((ONE--))
-				((TWO--))
-				((THREE--))
+			if [[ $failed -eq 0 ]] ; then
+				((TESTS_PASSED++))
 			else
-				ONE=0
-				TWO=0
-				THREE=0
+				((TESTS_KO += failed))
 			fi
 		fi
 	done < "$file"
@@ -680,30 +669,30 @@ print_stats() {
 	echo -e "🏁                                    \033[1;31mRESULT\033[m                                    🏁"
 	echo "🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁"
 	printf "\033[1;35m%-4s\033[m" "             TOTAL TEST COUNT: $TEST_COUNT "
-	printf "\033[1;32m TESTS PASSED: $GOOD_TEST\033[m "
+	echo -ne "\033[1;32m TESTS PASSED: $TESTS_PASSED\033[m "
 	if [[ $LEAKS == 0 ]] ; then
-		printf "\033[1;32m LEAKING: $LEAKS\033[m "
+		echo -ne "\033[1;32m LEAKING: $LEAKS\033[m "
 	else
-		printf "\033[1;31m LEAKING: $LEAKS\033[m "
+		echo -ne "\033[1;31m LEAKING: $LEAKS\033[m "
 	fi
 	echo ""
-	echo -ne "\033[1;34m           STD_OUT:\033[m "
-	if [[ $TEST_KO_OUT == 0 ]] ; then
-		echo -ne "\033[1;32m✓ \033[m  "
+	echo -ne "\033[1;34m             STD_OUT:\033[m "
+	if [[ $TESTS_KO_OUT == 0 ]] ; then
+		echo -ne "\033[1;32m✓\033[m  "
 	else
-		echo -ne "\033[1;31m$TEST_KO_OUT\033[m  "
+		echo -ne "\033[1;31m$TESTS_KO_OUT\033[m  "
 	fi
 	echo -ne "\033[1;33mSTD_ERR:\033[m "
-	if [[ $TEST_KO_ERR == 0 ]] ; then
-		echo -ne "\033[1;32m✓ \033[m  "
+	if [[ $TESTS_KO_ERR == 0 ]] ; then
+		echo -ne "\033[1;32m✓\033[m  "
 	else
-		echo -ne "\033[1;31m$TEST_KO_ERR\033[m  "
+		echo -ne "\033[1;31m$TESTS_KO_ERR\033[m  "
 	fi
 	echo -ne "\033[1;36mEXIT_CODE:\033[m "
-	if [[ $TEST_KO_EXIT == 0 ]] ; then
-		echo -ne "\033[1;32m✓ \033[m  "
+	if [[ $TESTS_KO_EXIT == 0 ]] ; then
+		echo -ne "\033[1;32m✓\033[m  "
 	else
-		echo -ne "\033[1;31m$TEST_KO_EXIT\033[m  "
+		echo -ne "\033[1;31m$TESTS_KO_EXIT\033[m  "
 	fi
 	if [[ $CRASHES == 0 ]] ; then
 		echo -ne "\033[1;32mCRASHING: $CRASHES\033[m "
@@ -712,8 +701,8 @@ print_stats() {
 	fi
 	echo ""
 	echo -e "\033[1;33m                         TOTAL FAILED AND PASSED CASES:"
-	echo -e "\033[1;31m                                     ❌ $FAILED \033[m  "
-	echo -ne "\033[1;32m                                     ✅ $TEST_OK \033[m  "
+	echo -e "\033[1;31m                                     ❌ $TESTS_KO \033[m  "
+	echo -ne "\033[1;32m                                     ✅ $TESTS_OK \033[m  "
 	echo ""
 }
 

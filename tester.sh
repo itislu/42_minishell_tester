@@ -641,6 +641,7 @@ run_test() {
 				if [[ "$leak_found" -ne 0 ]] ; then
 					echo -ne "❌ "
 					((LEAKS++))
+					((failed++))
 					mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null
 					mv "$TMP_OUTDIR/tmp_valgrind_out" "$OUTDIR/$dir_name/$file_name/${i}_valgrind_out" 2>/dev/null
 				else

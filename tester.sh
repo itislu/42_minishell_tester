@@ -131,15 +131,6 @@ main() {
 	fi
 }
 
-update_tester() {
-	cd "$RUNDIR" || return 1
-	if git rev-parse --is-inside-work-tree >/dev/null 2>&1 ; then
-		echo "Checking for updates..."
-		git pull 2>/dev/null | head -n 1 | grep "Already up to date." || { echo "Tester updated." && cd - >/dev/null && exec "$0" --no-update "${SCRIPT_ARGS[@]}" ; exit ; }
-	fi
-	cd - >/dev/null
-}
-
 print_usage() {
 	echo -e "  \033[1;33m# **************************************************************************** #"
 	echo -e "  #                          USAGE: mstest [options]                             #"
@@ -163,17 +154,6 @@ print_usage() {
 	echo -e "  #      --no-update         Don't check for updates                             #"
 	echo -e "  #   -h|--help              Show this help message and exit                     #"
 	echo -e "  # **************************************************************************** #\033[m"
-}
-
-# Prompt the user for confirmation
-# Default is 'no', for 'yes' needs y/Y/yes/Yes + Enter key
-prompt_with_enter() {
-    echo -e "$1 [\e[1my\e[0m/\e[1mN\e[0m]"
-    read -rp "> "
-    if [[ "$REPLY" =~ ^[Yy]([Ee][Ss])?$ ]]; then
-        return 0
-    fi
-    return 1
 }
 
 process_options() {
@@ -416,12 +396,12 @@ process_tests() {
 print_title() {
 	local title="$1"
 	local s="$2"
-	local title_length=${#title}
 	local total_length=80
-	local padding_length=$(( (total_length - title_length - 4) / 2 ))
-	local padding_right_length=$((padding_length + (total_length - title_length - 4) % 2))
-	local padding_left=$(printf '%*s' "$padding_length" "")
-	local padding_right=$(printf '%*s' "$padding_right_length" "")
+	local title_length=${#title}
+	local padding_length_left=$(( (total_length - title_length - 4) / 2 ))
+	local padding_length_right=$((padding_length_left + (total_length - title_length - 4) % 2))
+	local padding_left=$(printf '%*s' "$padding_length_left" "")
+	local padding_right=$(printf '%*s' "$padding_length_right" "")
 
 	echo "  $s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s"
 	echo -e "  $s${padding_left}\033[1;34m$title\033[m${padding_right}$s"
@@ -705,6 +685,40 @@ print_stats() {
 	echo -e "\033[1;31m                                     ❌ $TESTS_KO \033[m  "
 	echo -ne "\033[1;32m                                     ✅ $TESTS_OK \033[m  "
 	echo ""
+}
+
+update_tester() {
+	cd "$RUNDIR" || return 1
+	if git rev-parse --is-inside-work-tree >/dev/null 2>&1 ; then
+		echo "Checking for updates..."
+		git pull 2>/dev/null | head -n 1 | grep "Already up to date." || { echo "Tester updated." && cd - >/dev/null && exec "$0" --no-update "${SCRIPT_ARGS[@]}" ; exit ; }
+	fi
+	cd - >/dev/null
+}
+
+# Prompt the user for confirmation
+# Default is 'no', for 'yes' needs y/Y/yes/Yes + Enter key
+prompt_with_enter() {
+    echo -e "$1 [\e[1my\e[0m/\e[1mN\e[0m]"
+    read -rp "> "
+    if [[ "$REPLY" =~ ^[Yy]([Ee][Ss])?$ ]]; then
+        return 0
+    fi
+    return 1
+}
+
+strip_ansi() {
+    echo -ne "${1}" | sed -r "s/(\033|\x1B|\x1b|\e)\[(([0-9]{1,3};)*[0-9]{1,3})?[mGK]//g"
+}
+
+print_centered() {
+    local text=$1
+    local total_length=82
+	local pure_text="$(strip_ansi "$text")"
+    local text_length=${#pure_text}
+    local padding=$(( (total_length - text_length + 1) / 2 ))
+
+    printf "%*s%b\n" $padding "" "$text"
 }
 
 cleanup() {

@@ -136,8 +136,8 @@ print_usage() {
 	echo -e "  #   vb                     Run bonus tests with memory leak checks             #"
 	echo -e "  #   ne                     Run empty environment tests                         #"
 	echo -e "  #   vne                    Run empty environment tests with memory leak checks #"
-	echo -e "  #   d                      Run death tests (hardcore)                          #"
-	echo -e "  #   vd                     Run death tests with memory leak checks (hardcore)  #"
+	echo -e "  #   c                      Run crash tests                                     #"
+	echo -e "  #   vc                     Run crash tests with memory leak checks             #"
 	echo -e "  #   a                      Run all tests                                       #"
 	echo -e "  #   va                     Run all tests with memory leak checks               #"
 	echo -e "  #   -l|--leaks             Enable memory leak checks for any test              #"
@@ -192,7 +192,7 @@ process_options() {
 				NO_UPDATE="true"
 				shift
 				;;
-			m|vm|b|vb|ne|vne|d|vd|a|va)
+			m|vm|b|vb|ne|vne|c|vc|a|va)
 				shift
 				;;
 			*)
@@ -297,8 +297,8 @@ process_tests() {
 				run_tests "$dir" "test_flags"
 				shift
 				;;
-			d)
-				dir="mini_death"
+			c)
+				dir="crash"
 				declare -A test_flags=(
 					[stdout]="false"
 					[stderr]="false"
@@ -307,12 +307,12 @@ process_tests() {
 					[leaks]="$TEST_LEAKS"
 					[no_env]="$NO_ENV"
 				)
-				print_title "MINI_DEATH" "💀"
+				print_title "CRASH" "💥"
 				run_tests "$dir" "test_flags"
 				shift
 				;;
-			vd)
-				dir="mini_death"
+			vc)
+				dir="crash"
 				declare -A test_flags=(
 					[stdout]="false"
 					[stderr]="false"
@@ -321,7 +321,7 @@ process_tests() {
 					[leaks]="true"
 					[no_env]="$NO_ENV"
 				)
-				print_title "MINI_DEATH_LEAKS" "💀"
+				print_title "CRASH_LEAKS" "💥"
 				run_tests "$dir" "test_flags"
 				shift
 				;;

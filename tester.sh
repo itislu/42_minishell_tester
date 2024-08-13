@@ -646,45 +646,46 @@ run_test() {
 }
 
 print_stats() {
+	local line
+
 	echo "🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁"
 	echo -e "🏁                                    \033[1;31mRESULT\033[m                                    🏁"
 	echo "🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁"
-	printf "\033[1;35m%-4s\033[m" "             TOTAL TEST COUNT: $TEST_COUNT "
-	echo -ne "\033[1;32m TESTS PASSED: $TESTS_PASSED\033[m "
+	line="\033[1;35mTOTAL TEST COUNT: $TEST_COUNT\033[m"
+	line+="  \033[1;32mTESTS PASSED: $TESTS_PASSED\033[m"
 	if [[ $LEAKS == 0 ]] ; then
-		echo -ne "\033[1;32m LEAKING: $LEAKS\033[m "
+		line+="  \033[1;32mLEAKING: $LEAKS\033[m"
 	else
-		echo -ne "\033[1;31m LEAKING: $LEAKS\033[m "
+		line+="  \033[1;31mLEAKING: $LEAKS\033[m"
 	fi
-	echo ""
-	echo -ne "\033[1;34m             STD_OUT:\033[m "
+	print_centered "$line"
+	line="\033[1;34mSTD_OUT:\033[m "
 	if [[ $TESTS_KO_OUT == 0 ]] ; then
-		echo -ne "\033[1;32m✓\033[m  "
+		line+="\033[1;32m✓\033[m"
 	else
-		echo -ne "\033[1;31m$TESTS_KO_OUT\033[m  "
+		line+="\033[1;31m$TESTS_KO_OUT\033[m"
 	fi
-	echo -ne "\033[1;33mSTD_ERR:\033[m "
+	line+="  \033[1;33mSTD_ERR:\033[m "
 	if [[ $TESTS_KO_ERR == 0 ]] ; then
-		echo -ne "\033[1;32m✓\033[m  "
+		line+="\033[1;32m✓\033[m"
 	else
-		echo -ne "\033[1;31m$TESTS_KO_ERR\033[m  "
+		line+="\033[1;31m$TESTS_KO_ERR\033[m"
 	fi
-	echo -ne "\033[1;36mEXIT_CODE:\033[m "
+	line+="  \033[1;36mEXIT_CODE:\033[m "
 	if [[ $TESTS_KO_EXIT == 0 ]] ; then
-		echo -ne "\033[1;32m✓\033[m  "
+		line+="\033[1;32m✓\033[m"
 	else
-		echo -ne "\033[1;31m$TESTS_KO_EXIT\033[m  "
+		line+="\033[1;31m$TESTS_KO_EXIT\033[m"
 	fi
 	if [[ $CRASHES == 0 ]] ; then
-		echo -ne "\033[1;32mCRASHING: $CRASHES\033[m "
+		line+="  \033[1;32mCRASHING: $CRASHES\033[m"
 	else
-		echo -ne "\033[1;31mCRASHING: $CRASHES\033[m "
+		line+="  \033[1;31mCRASHING: $CRASHES\033[m"
 	fi
-	echo ""
-	echo -e "\033[1;33m                         TOTAL FAILED AND PASSED CASES:"
-	echo -e "\033[1;31m                                     ❌ $TESTS_KO \033[m  "
-	echo -ne "\033[1;32m                                     ✅ $TESTS_OK \033[m  "
-	echo ""
+	print_centered "$line"
+	print_centered "\033[1;33mTOTAL FAILED AND PASSED CASES:\033[m"
+	echo -e "\033[1;31m                                      ❌ $TESTS_KO \033[m"
+	echo -e "\033[1;32m                                      ✅ $TESTS_OK \033[m"
 }
 
 update_tester() {

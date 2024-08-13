@@ -66,14 +66,9 @@ NL=$'\n'
 TAB=$'\t'
 
 TEST_COUNT=0
+TESTS_PASSED=0
 TESTS_OK=0
 TESTS_KO=0
-TESTS_KO_OUT=0
-TESTS_KO_ERR=0
-TESTS_KO_EXIT=0
-TESTS_PASSED=0
-CRASHES=0
-LEAKS=0
 
 SCRIPT_ARGS=("$@")
 
@@ -456,6 +451,22 @@ run_test() {
 	if  [[ $test_leaks == "true" ]] ; then
 		valgrind="$VALGRIND"
 	fi
+	if [[ $test_stdout == "true" && -z $TESTS_KO_OUT ]] ; then
+		TESTS_KO_OUT=0
+	fi
+	if [[ $test_stderr == "true" && -z $TESTS_KO_ERR ]] ; then
+		TESTS_KO_ERR=0
+	fi
+	if [[ $test_exit_code == "true" && -z $TESTS_KO_EXIT ]] ; then
+		TESTS_KO_EXIT=0
+	fi
+	if [[ $test_crash == "true" && -z $CRASHES ]] ; then
+		CRASHES=0
+	fi
+	if [[ $test_leaks == "true" && -z $LEAKS ]] ; then
+		LEAKS=0
+	fi
+
 	IFS=''
 	i=1
 	end_of_file=0
@@ -653,36 +664,49 @@ print_stats() {
 	echo "🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁"
 	line="\033[1;35mTOTAL TEST COUNT: $TEST_COUNT\033[m"
 	line+="  \033[1;32mTESTS PASSED: $TESTS_PASSED\033[m"
-	if [[ $LEAKS == 0 ]] ; then
-		line+="  \033[1;32mLEAKING: $LEAKS\033[m"
-	else
-		line+="  \033[1;31mLEAKING: $LEAKS\033[m"
+	if [[ -n $LEAKS ]] ; then
+		if [[ $LEAKS == 0 ]] ; then
+			line+="  \033[1;32mLEAKING: $LEAKS\033[m"
+		else
+			line+="  \033[1;31mLEAKING: $LEAKS\033[m"
+		fi
 	fi
 	print_centered "$line"
-	line="\033[1;34mSTD_OUT:\033[m "
-	if [[ $TESTS_KO_OUT == 0 ]] ; then
-		line+="\033[1;32m✓\033[m"
-	else
-		line+="\033[1;31m$TESTS_KO_OUT\033[m"
+
+	line=""
+	if [[ -n $TESTS_KO_OUT ]] ; then
+		line="\033[1;34mSTD_OUT:\033[m "
+		if [[ $TESTS_KO_OUT == 0 ]] ; then
+			line+="\033[1;32m✓\033[m"
+		else
+			line+="\033[1;31m$TESTS_KO_OUT\033[m"
+		fi
 	fi
-	line+="  \033[1;33mSTD_ERR:\033[m "
-	if [[ $TESTS_KO_ERR == 0 ]] ; then
-		line+="\033[1;32m✓\033[m"
-	else
-		line+="\033[1;31m$TESTS_KO_ERR\033[m"
+	if [[ -n $TESTS_KO_ERR ]] ; then
+		line+="  \033[1;33mSTD_ERR:\033[m "
+		if [[ $TESTS_KO_ERR == 0 ]] ; then
+			line+="\033[1;32m✓\033[m"
+		else
+			line+="\033[1;31m$TESTS_KO_ERR\033[m"
+		fi
 	fi
-	line+="  \033[1;36mEXIT_CODE:\033[m "
-	if [[ $TESTS_KO_EXIT == 0 ]] ; then
-		line+="\033[1;32m✓\033[m"
-	else
-		line+="\033[1;31m$TESTS_KO_EXIT\033[m"
+	if [[ -n $TESTS_KO_EXIT ]] ; then
+		line+="  \033[1;36mEXIT_CODE:\033[m "
+		if [[ $TESTS_KO_EXIT == 0 ]] ; then
+			line+="\033[1;32m✓\033[m"
+		else
+			line+="\033[1;31m$TESTS_KO_EXIT\033[m"
+		fi
 	fi
-	if [[ $CRASHES == 0 ]] ; then
-		line+="  \033[1;32mCRASHING: $CRASHES\033[m"
-	else
-		line+="  \033[1;31mCRASHING: $CRASHES\033[m"
+	if [[ -n $CRASHES ]] ; then
+		if [[ $CRASHES == 0 ]] ; then
+			line+="  \033[1;32mCRASHING: $CRASHES\033[m"
+		else
+			line+="  \033[1;31mCRASHING: $CRASHES\033[m"
+		fi
 	fi
 	print_centered "$line"
+
 	print_centered "\033[1;33mTOTAL FAILED AND PASSED CASES:\033[m"
 	echo -e "\033[1;31m                                      ❌ $TESTS_KO \033[m"
 	echo -e "\033[1;32m                                      ✅ $TESTS_OK \033[m"

@@ -406,6 +406,23 @@ print_title() {
 run_tests() {
 	local dir=$1
 	local test_flags_ref_name=$2
+	local -n test_flags_ref=$test_flags_ref_name
+	declare -A test_flags_no_env=(
+		[stdout]="${test_flags_ref[stdout]}"
+		[stderr]="${test_flags_ref[stderr]}"
+		[exit_code]="${test_flags_ref[exit_code]}"
+		[crash]="${test_flags_ref[crash]}"
+		[leaks]="${test_flags_ref[leaks]}"
+		[no_env]="true"
+	)
+	declare -A test_flags_crash=(
+		[stdout]="false"
+		[stderr]="false"
+		[exit_code]="false"
+		[crash]="true"
+		[leaks]="${test_flags_ref[leaks]}"
+		[no_env]="${test_flags_ref[no_env]}"
+	)
 	local files
 
 	if [[ $dir == "all" ]] ; then
@@ -414,7 +431,13 @@ run_tests() {
 		files="${RUNDIR}/cmds/${dir}/*"
 	fi
 	for file in $files ; do
-		run_test "$file" "$test_flags_ref_name"
+		if [[ $(basename "$(dirname "$file")") == "no_env" ]] ; then
+			run_test "$file" "test_flags_no_env"
+		elif [[ $(basename "$(dirname "$file")") == "crash" ]] ; then
+			run_test "$file" "test_flags_crash"
+		else
+			run_test "$file" "$test_flags_ref_name"
+		fi
 	done
 }
 

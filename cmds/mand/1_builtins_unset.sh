@@ -25,6 +25,9 @@ unset $
 unset "$"
 
 export TEST=100
+echo $TEST
+unset TEST
+echo $TEST
 
 unset doesntexist
 

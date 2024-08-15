@@ -159,6 +159,7 @@ rm tmp_redir_out
 touch tmp_redir_out_file1
 chmod -r tmp_redir_out_file1
 /bin/echo 1 > tmp_redir_out tmp_redir_out_file1
+rm tmp_redir_out_file1
 
 /bin/grep 1 < inputfile
 

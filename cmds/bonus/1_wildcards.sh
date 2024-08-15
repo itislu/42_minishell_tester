@@ -56,9 +56,9 @@ rm minishelxxxl
 
 touch tmp_out
 /bin/echo 42 >tmp_o*t*
-rm -f "tmp_out*"
+rm -f tmp_o*
 
 touch tmp_out1
 touch tmp_out2
 /bin/echo 42 >tmp_out*
-rm -f "tmp_out*"
+rm -f tmp_out*

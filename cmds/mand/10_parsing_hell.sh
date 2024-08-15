@@ -302,3 +302,13 @@ exit 123"123"
 <| echo ok
 
 > echo sure
+
+echo |< echo segf
+
+echo | < echo segf
+
+echo |      < echo segf
+
+echo segfault <"<<<"<<amazing
+.
+amazing

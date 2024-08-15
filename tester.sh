@@ -6,7 +6,7 @@ export EXECUTABLE=minishell
 RUNDIR=$HOME/42_minishell_tester
 DATE=$(date +%Y-%m-%d_%H.%M.%S)
 TMP_OUTDIR=$RUNDIR/tmp_$DATE
-OUTDIR=$MINISHELL_PATH/tester_output_$DATE
+OUTDIR=$MINISHELL_PATH/mstest_output_$DATE
 
 # Test how minishell behaves to adjust the output filters to it
 adjust_to_minishell() {

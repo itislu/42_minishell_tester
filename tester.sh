@@ -6,7 +6,7 @@ export EXECUTABLE=minishell
 RUNDIR=$HOME/42_minishell_tester
 DATE=$(date +%Y-%m-%d_%H.%M.%S)
 TMP_OUTDIR=$RUNDIR/tmp_$DATE
-OUTDIR=$MINISHELL_PATH/tester_output_$DATE
+OUTDIR=$MINISHELL_PATH/mstest_output_$DATE
 
 # Test how minishell behaves to adjust the output filters to it
 adjust_to_minishell() {
@@ -66,16 +66,9 @@ NL=$'\n'
 TAB=$'\t'
 
 TEST_COUNT=0
-TEST_KO_OUT=0
-TEST_KO_ERR=0
-TEST_KO_EXIT=0
-TEST_OK=0
-FAILED=0
-ONE=0
-TWO=0
-THREE=0
-GOOD_TEST=0
-LEAKS=0
+TESTS_PASSED=0
+TESTS_OK=0
+TESTS_KO=0
 
 SCRIPT_ARGS=("$@")
 
@@ -123,23 +116,14 @@ main() {
 	fi
 
 	if [[ "$GITHUB_ACTIONS" == "true" ]] ; then
-		echo "$GH_BRANCH=$FAILED" >> "$GITHUB_ENV"
+		echo "$GH_BRANCH=$TESTS_KO" >> "$GITHUB_ENV"
 	fi
 
-	if [[ $LEAKS -ne 0 ]] ; then
+	if [[ $LEAKS -ne 0 || $CRASHES -ne 0 ]] ; then
 		exit 1
 	else
 		exit 0
 	fi
-}
-
-update_tester() {
-	cd "$RUNDIR" || return 1
-	if git rev-parse --is-inside-work-tree >/dev/null 2>&1 ; then
-		echo "Checking for updates..."
-		git pull 2>/dev/null | head -n 1 | grep "Already up to date." || { echo "Tester updated." && cd - >/dev/null && exec "$0" --no-update "${SCRIPT_ARGS[@]}" ; exit ; }
-	fi
-	cd - >/dev/null
 }
 
 print_usage() {
@@ -152,8 +136,8 @@ print_usage() {
 	echo -e "  #   vb                     Run bonus tests with memory leak checks             #"
 	echo -e "  #   ne                     Run empty environment tests                         #"
 	echo -e "  #   vne                    Run empty environment tests with memory leak checks #"
-	echo -e "  #   d                      Run death tests (hardcore)                          #"
-	echo -e "  #   vd                     Run death tests with memory leak checks (hardcore)  #"
+	echo -e "  #   c                      Run crash tests                                     #"
+	echo -e "  #   vc                     Run crash tests with memory leak checks             #"
 	echo -e "  #   a                      Run all tests                                       #"
 	echo -e "  #   va                     Run all tests with memory leak checks               #"
 	echo -e "  #   -l|--leaks             Enable memory leak checks for any test              #"
@@ -165,17 +149,6 @@ print_usage() {
 	echo -e "  #      --no-update         Don't check for updates                             #"
 	echo -e "  #   -h|--help              Show this help message and exit                     #"
 	echo -e "  # **************************************************************************** #\033[m"
-}
-
-# Prompt the user for confirmation
-# Default is 'no', for 'yes' needs y/Y/yes/Yes + Enter key
-prompt_with_enter() {
-    echo -e "$1 [\e[1my\e[0m/\e[1mN\e[0m]"
-    read -rp "> "
-    if [[ "$REPLY" =~ ^[Yy]([Ee][Ss])?$ ]]; then
-        return 0
-    fi
-    return 1
 }
 
 process_options() {
@@ -219,7 +192,7 @@ process_options() {
 				NO_UPDATE="true"
 				shift
 				;;
-			m|vm|b|vb|ne|vne|d|vd|a|va)
+			m|vm|b|vb|ne|vne|c|vc|a|va)
 				shift
 				;;
 			*)
@@ -242,81 +215,170 @@ process_tests() {
 		case $1 in
 			m)
 				dir="mand"
+				declare -A test_flags=(
+					[stdout]="true"
+					[stderr]="true"
+					[exit_code]="true"
+					[crash]="true"
+					[leaks]="$TEST_LEAKS"
+					[no_env]="$NO_ENV"
+				)
 				print_title "MANDATORY" "🚀"
-				run_tests "$dir" "$TEST_LEAKS" "$NO_ENV"
+				run_tests "$dir" "test_flags"
 				shift
 				;;
 			vm)
 				dir="mand"
-				test_leaks="true"
+				declare -A test_flags=(
+					[stdout]="true"
+					[stderr]="true"
+					[exit_code]="true"
+					[crash]="true"
+					[leaks]="true"
+					[no_env]="$NO_ENV"
+				)
 				print_title "MANDATORY_LEAKS" "🚀"
-				run_tests "$dir" "$test_leaks" "$NO_ENV"
+				run_tests "$dir" "test_flags"
 				shift
 				;;
 			b)
 				dir="bonus"
+				declare -A test_flags=(
+					[stdout]="true"
+					[stderr]="true"
+					[exit_code]="true"
+					[crash]="true"
+					[leaks]="$TEST_LEAKS"
+					[no_env]="$NO_ENV"
+				)
 				print_title "BONUS" "🎉"
-				run_tests "$dir" "$TEST_LEAKS" "$NO_ENV"
+				run_tests "$dir" "test_flags"
 				shift
 				;;
 			vb)
 				dir="bonus"
-				test_leaks="true"
+				declare -A test_flags=(
+					[stdout]="true"
+					[stderr]="true"
+					[exit_code]="true"
+					[crash]="true"
+					[leaks]="true"
+					[no_env]="$NO_ENV"
+				)
 				print_title "BONUS_LEAKS" "🎉"
-				run_tests "$dir" "$test_leaks" "$NO_ENV"
+				run_tests "$dir" "test_flags"
 				shift
 				;;
 			ne)
 				dir="no_env"
-				no_env="true"
+				declare -A test_flags=(
+					[stdout]="true"
+					[stderr]="true"
+					[exit_code]="true"
+					[crash]="true"
+					[leaks]="$TEST_LEAKS"
+					[no_env]="true"
+				)
 				print_title "NO_ENV" "🌐"
-				run_tests "$dir" "$TEST_LEAKS" "$no_env"
+				run_tests "$dir" "test_flags"
 				shift
 				;;
 			vne)
 				dir="no_env"
-				test_leaks="true"
-				no_env="true"
+				declare -A test_flags=(
+					[stdout]="true"
+					[stderr]="true"
+					[exit_code]="true"
+					[crash]="true"
+					[leaks]="true"
+					[no_env]="true"
+				)
 				print_title "NO_ENV_LEAKS" "🌐"
-				run_tests "$dir" "$test_leaks" "$no_env"
+				run_tests "$dir" "test_flags"
 				shift
 				;;
-			d)
-				dir="mini_death"
-				print_title "MINI_DEATH" "💀"
-				run_tests "$dir" "$TEST_LEAKS" "$NO_ENV"
+			c)
+				dir="crash"
+				declare -A test_flags=(
+					[stdout]="false"
+					[stderr]="false"
+					[exit_code]="false"
+					[crash]="true"
+					[leaks]="$TEST_LEAKS"
+					[no_env]="$NO_ENV"
+				)
+				print_title "CRASH" "💥"
+				run_tests "$dir" "test_flags"
 				shift
 				;;
-			vd)
-				dir="mini_death"
-				test_leaks="true"
-				print_title "MINI_DEATH_LEAKS" "💀"
-				run_tests "$dir" "$test_leaks" "$NO_ENV"
+			vc)
+				dir="crash"
+				declare -A test_flags=(
+					[stdout]="false"
+					[stderr]="false"
+					[exit_code]="false"
+					[crash]="true"
+					[leaks]="true"
+					[no_env]="$NO_ENV"
+				)
+				print_title "CRASH_LEAKS" "💥"
+				run_tests "$dir" "test_flags"
 				shift
 				;;
 			a)
 				dir="all"
+				declare -A test_flags=(
+					[stdout]="true"
+					[stderr]="true"
+					[exit_code]="true"
+					[crash]="true"
+					[leaks]="$TEST_LEAKS"
+					[no_env]="$NO_ENV"
+				)
 				print_title "ALL" "🌟"
-				run_tests "$dir" "$TEST_LEAKS" "$NO_ENV"
+				run_tests "$dir" "test_flags"
 				shift
 				;;
 			va)
 				dir="all"
-				test_leaks="true"
+				declare -A test_flags=(
+					[stdout]="true"
+					[stderr]="true"
+					[exit_code]="true"
+					[crash]="true"
+					[leaks]="true"
+					[no_env]="$NO_ENV"
+				)
 				print_title "ALL_LEAKS" "🌟"
-				run_tests "$dir" "$test_leaks" "$NO_ENV"
+				run_tests "$dir" "test_flags"
 				shift
 				;;
 			-f|--file)
 				file="$2"
+				declare -A test_flags=(
+					[stdout]="true"
+					[stderr]="true"
+					[exit_code]="true"
+					[crash]="true"
+					[leaks]="$TEST_LEAKS"
+					[no_env]="$NO_ENV"
+				)
 				print_title "FILE: $file" "📄"
-				run_tests_from_file "$file" "$TEST_LEAKS" "$NO_ENV"
+				run_tests_from_file "$file" "test_flags"
 				shift 2
 				;;
 			-d|--dir)
 				dir="$2"
+				declare -A test_flags=(
+					[stdout]="true"
+					[stderr]="true"
+					[exit_code]="true"
+					[crash]="true"
+					[leaks]="$TEST_LEAKS"
+					[no_env]="$NO_ENV"
+				)
 				print_title "DIRECTORY: $dir" "📁"
-				run_tests_from_dir "$dir" "$TEST_LEAKS" "$NO_ENV"
+				run_tests_from_dir "$dir" "test_flags"
 				shift 2
 				;;
 			*)
@@ -329,12 +391,12 @@ process_tests() {
 print_title() {
 	local title="$1"
 	local s="$2"
-	local title_length=${#title}
 	local total_length=80
-	local padding_length=$(( (total_length - title_length - 4) / 2 ))
-	local padding_right_length=$((padding_length + (total_length - title_length - 4) % 2))
-	local padding_left=$(printf '%*s' "$padding_length" "")
-	local padding_right=$(printf '%*s' "$padding_right_length" "")
+	local title_length=${#title}
+	local padding_length_left=$(( (total_length - title_length - 4) / 2 ))
+	local padding_length_right=$((padding_length_left + (total_length - title_length - 4) % 2))
+	local padding_left=$(printf '%*s' "$padding_length_left" "")
+	local padding_right=$(printf '%*s' "$padding_length_right" "")
 
 	echo "  $s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s$s"
 	echo -e "  $s${padding_left}\033[1;34m$title\033[m${padding_right}$s"
@@ -343,8 +405,24 @@ print_title() {
 
 run_tests() {
 	local dir=$1
-	local test_leaks=$2
-	local no_env=$3
+	local test_flags_ref_name=$2
+	local -n test_flags_ref=$test_flags_ref_name
+	declare -A test_flags_no_env=(
+		[stdout]="${test_flags_ref[stdout]}"
+		[stderr]="${test_flags_ref[stderr]}"
+		[exit_code]="${test_flags_ref[exit_code]}"
+		[crash]="${test_flags_ref[crash]}"
+		[leaks]="${test_flags_ref[leaks]}"
+		[no_env]="true"
+	)
+	declare -A test_flags_crash=(
+		[stdout]="false"
+		[stderr]="false"
+		[exit_code]="false"
+		[crash]="true"
+		[leaks]="${test_flags_ref[leaks]}"
+		[no_env]="${test_flags_ref[no_env]}"
+	)
 	local files
 
 	if [[ $dir == "all" ]] ; then
@@ -353,33 +431,42 @@ run_tests() {
 		files="${RUNDIR}/cmds/${dir}/*"
 	fi
 	for file in $files ; do
-		run_test "$file" "$test_leaks" "$no_env"
+		if [[ $(basename "$(dirname "$file")") == "no_env" ]] ; then
+			run_test "$file" "test_flags_no_env"
+		elif [[ $(basename "$(dirname "$file")") == "crash" ]] ; then
+			run_test "$file" "test_flags_crash"
+		else
+			run_test "$file" "$test_flags_ref_name"
+		fi
 	done
 }
 
 run_tests_from_file() {
 	local file=$1
-	local test_leaks=$2
-	local no_env=$3
+	local test_flags_ref_name=$2
 
-	run_test "$file" "$test_leaks" "$no_env"
+	run_test "$file" "$test_flags_ref_name"
 }
 
 run_tests_from_dir() {
 	local dir=$1
-	local test_leaks=$2
-	local no_env=$3
+	local test_flags_ref_name=$2
 	local files="${dir}/*"
 
 	for file in $files ; do
-		run_test "$file" "$test_leaks" "$no_env"
+		run_test "$file" "$test_flags_ref_name"
 	done
 }
 
 run_test() {
 	local file=$1
-	local test_leaks=$2
-	local no_env=$3
+	local -n test_flags_ref=$2
+	local test_stdout=${test_flags_ref[stdout]}
+	local test_stderr=${test_flags_ref[stderr]}
+	local test_exit_code=${test_flags_ref[exit_code]}
+	local test_crash=${test_flags_ref[crash]}
+	local test_leaks=${test_flags_ref[leaks]}
+	local no_env=${test_flags_ref[no_env]}
 
 	if [[ $no_env == "true" ]] ; then
 		env="env -i"
@@ -387,6 +474,22 @@ run_test() {
 	if  [[ $test_leaks == "true" ]] ; then
 		valgrind="$VALGRIND"
 	fi
+	if [[ $test_stdout == "true" && -z $TESTS_KO_OUT ]] ; then
+		TESTS_KO_OUT=0
+	fi
+	if [[ $test_stderr == "true" && -z $TESTS_KO_ERR ]] ; then
+		TESTS_KO_ERR=0
+	fi
+	if [[ $test_exit_code == "true" && -z $TESTS_KO_EXIT ]] ; then
+		TESTS_KO_EXIT=0
+	fi
+	if [[ $test_crash == "true" && -z $CRASHES ]] ; then
+		CRASHES=0
+	fi
+	if [[ $test_leaks == "true" && -z $LEAKS ]] ; then
+		LEAKS=0
+	fi
+
 	IFS=''
 	i=1
 	end_of_file=0
@@ -398,7 +501,7 @@ run_test() {
 		read -r line
 		end_of_file=$?
 		((line_count++))
-		if [[ $line == \#* ]] || [[ $line == "" ]] ; then
+		if [[ $line == "#"* ]] || [[ $line == "" ]] ; then
 			if [[ $line == "#"[[:blank:]]*[[:blank:]]"#" ]] ; then
 				echo -e "\033[1;33m		$line\033[m" | tr '\t' '    '
 			fi
@@ -406,7 +509,8 @@ run_test() {
 		else
 			printf "\033[1;35m%-4s\033[m" "  $i:	"
 			tmp_line_count=$line_count
-			while [[ $end_of_file == 0 ]] && [[ $line != \#* ]] && [[ $line != "" ]] ; do
+			failed=0
+			while [[ $end_of_file == 0 ]] && [[ $line != "#"* ]] && [[ $line != "" ]] ; do
 				input+="$line$NL"
 				read -r line
 				end_of_file=$?
@@ -415,74 +519,101 @@ run_test() {
 
 			# Run the test
 			if [[ $test_leaks == "true" ]] ; then
-				echo -n "$input" | eval "$env $valgrind $MINISHELL_PATH/$EXECUTABLE" 2>/dev/null >/dev/null
+				echo -n "$input" | eval "$env $valgrind $MINISHELL_PATH/$EXECUTABLE" &>/dev/null
 			fi
-			echo -n "$input" | eval "$env $MINISHELL_PATH/$EXECUTABLE" 2>"$TMP_OUTDIR/tmp_err_minishell" >"$TMP_OUTDIR/tmp_out_minishell"
-			exit_minishell=$?
-			echo -n "enable -n .$NL$input" | eval "$env $BASH" 2>"$TMP_OUTDIR/tmp_err_bash" >"$TMP_OUTDIR/tmp_out_bash"
-			exit_bash=$?
+			if [[ $test_stdout == "true" || $test_stderr == "true" || $test_exit_code == "true" || $test_crash == "true" ]] ; then
+				echo -n "$input" | eval "$env $MINISHELL_PATH/$EXECUTABLE" 2>"$TMP_OUTDIR/tmp_err_minishell" >"$TMP_OUTDIR/tmp_out_minishell"
+				exit_minishell=$?
+				echo -n "enable -n .$NL$input" | eval "$env $BASH" 2>"$TMP_OUTDIR/tmp_err_bash" >"$TMP_OUTDIR/tmp_out_bash"
+				exit_bash=$?
+			fi
 
 			# Check stdout
-			echo -ne "\033[1;34mSTD_OUT:\033[m "
-			if [[ -n "$MINISHELL_PROMPT" ]] ; then
-				if [[ $READLINE == "true" ]] ; then
-					# Filter out the prompt line of readline from stdout
-					sed -i "/^$MINISHELL_PROMPT/d" "$TMP_OUTDIR/tmp_out_minishell"
-				else
-					# Filter out the prompt from stdout
-					sed -i "s/^$MINISHELL_PROMPT//" "$TMP_OUTDIR/tmp_out_minishell"
+			if [[ $test_stdout == "true" ]] ; then
+				echo -ne "\033[1;34mSTD_OUT:\033[m "
+				if [[ -n "$MINISHELL_PROMPT" ]] ; then
+					if [[ $READLINE == "true" ]] ; then
+						# Filter out the prompt line of readline from stdout
+						sed -i "/^$MINISHELL_PROMPT/d" "$TMP_OUTDIR/tmp_out_minishell"
+					else
+						# Filter out the prompt from stdout
+						sed -i "s/^$MINISHELL_PROMPT//" "$TMP_OUTDIR/tmp_out_minishell"
+					fi
 				fi
-			fi
-			if ! diff -q "$TMP_OUTDIR/tmp_out_minishell" "$TMP_OUTDIR/tmp_out_bash" >/dev/null ; then
-				echo -ne "❌  " | tr '\n' ' '
-				((TEST_KO_OUT++))
-				((FAILED++))
-				mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null
-				mv "$TMP_OUTDIR/tmp_out_minishell" "$OUTDIR/$dir_name/$file_name/${i}_stdout_minishell" 2>/dev/null
-				mv "$TMP_OUTDIR/tmp_out_bash" "$OUTDIR/$dir_name/$file_name/${i}_stdout_bash" 2>/dev/null
-			else
-				echo -ne "✅  "
-				((TEST_OK++))
-				((ONE++))
+				if ! diff -q "$TMP_OUTDIR/tmp_out_minishell" "$TMP_OUTDIR/tmp_out_bash" >/dev/null ; then
+					echo -ne "❌  " | tr '\n' ' '
+					((TESTS_KO_OUT++))
+					((failed++))
+					mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null
+					mv "$TMP_OUTDIR/tmp_out_minishell" "$OUTDIR/$dir_name/$file_name/${i}_stdout_minishell" 2>/dev/null
+					mv "$TMP_OUTDIR/tmp_out_bash" "$OUTDIR/$dir_name/$file_name/${i}_stdout_bash" 2>/dev/null
+				else
+					echo -ne "✅  "
+					((TESTS_OK++))
+				fi
 			fi
 
 			# Check stderr
-			echo -ne "\033[1;33mSTD_ERR:\033[m "
-			if [[ -n "$MINISHELL_EXIT_MSG" ]] ; then
-				# Filter out the exit message from stderr
-				sed -i "/^$MINISHELL_EXIT_MSG$/d" "$TMP_OUTDIR/tmp_err_minishell"
-			fi
-			if grep -q '^bash: line [0-9]*:' "$TMP_OUTDIR/tmp_err_bash" ; then
-				# Normalize bash stderr by removing the program name and line number prefix
-				sed -i 's/^bash: line [0-9]*:/:/' "$TMP_OUTDIR/tmp_err_bash"
-				# Normalize minishell stderr by removing its program name prefix
-				sed -i "s/^\\($MINISHELL_ERR_NAME: line [0-9]*:\\|$MINISHELL_ERR_NAME:\\)/:/" "$TMP_OUTDIR/tmp_err_minishell"
-				# Remove the next line after a specific syntax error message in bash stderr
-				sed -i '/^: syntax error near unexpected token/{n; d}' "$TMP_OUTDIR/tmp_err_bash"
-			fi
-			if ! diff -q "$TMP_OUTDIR/tmp_err_minishell" "$TMP_OUTDIR/tmp_err_bash" >/dev/null ; then
-				echo -ne "❌  " | tr '\n' ' '
-				((TEST_KO_ERR++))
-				((FAILED++))
-				mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null
-				mv "$TMP_OUTDIR/tmp_err_minishell" "$OUTDIR/$dir_name/$file_name/${i}_stderr_minishell" 2>/dev/null
-				mv "$TMP_OUTDIR/tmp_err_bash" "$OUTDIR/$dir_name/$file_name/${i}_stderr_bash" 2>/dev/null
-			else
-				echo -ne "✅  "
-				((TEST_OK++))
-				((TWO++))
+			if [[ $test_stderr == "true" ]] ; then
+				echo -ne "\033[1;33mSTD_ERR:\033[m "
+				if [[ -n "$MINISHELL_EXIT_MSG" ]] ; then
+					# Filter out the exit message from stderr
+					sed -i "/^$MINISHELL_EXIT_MSG$/d" "$TMP_OUTDIR/tmp_err_minishell"
+				fi
+				if grep -q '^bash: line [0-9]*:' "$TMP_OUTDIR/tmp_err_bash" ; then
+					# Normalize bash stderr by removing the program name and line number prefix
+					sed -i 's/^bash: line [0-9]*:/:/' "$TMP_OUTDIR/tmp_err_bash"
+					# Normalize minishell stderr by removing its program name prefix
+					sed -i "s/^\\($MINISHELL_ERR_NAME: line [0-9]*:\\|$MINISHELL_ERR_NAME:\\)/:/" "$TMP_OUTDIR/tmp_err_minishell"
+					# Remove the next line after a specific syntax error message in bash stderr
+					sed -i '/^: syntax error near unexpected token/{n; d}' "$TMP_OUTDIR/tmp_err_bash"
+				fi
+				if ! diff -q "$TMP_OUTDIR/tmp_err_minishell" "$TMP_OUTDIR/tmp_err_bash" >/dev/null ; then
+					echo -ne "❌  " | tr '\n' ' '
+					((TESTS_KO_ERR++))
+					((failed++))
+					mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null
+					mv "$TMP_OUTDIR/tmp_err_minishell" "$OUTDIR/$dir_name/$file_name/${i}_stderr_minishell" 2>/dev/null
+					mv "$TMP_OUTDIR/tmp_err_bash" "$OUTDIR/$dir_name/$file_name/${i}_stderr_bash" 2>/dev/null
+				else
+					echo -ne "✅  "
+					((TESTS_OK++))
+				fi
 			fi
 
 			# Check exit code
-			echo -ne "\033[1;36mEXIT_CODE:\033[m "
-			if [[ $exit_minishell != $exit_bash ]] ; then
-				echo -ne "❌\033[1;31m [ minishell($exit_minishell)  bash($exit_bash) ]\033[m  " | tr '\n' ' '
-				((TEST_KO_EXIT++))
-				((FAILED++))
-			else
-				echo -ne "✅  "
-				((TEST_OK++))
-				((THREE++))
+			if [[ $test_exit_code == "true" ]] ; then
+				echo -ne "\033[1;36mEXIT_CODE:\033[m "
+				if [[ $exit_minishell != $exit_bash ]] ; then
+					echo -ne "❌\033[1;31m [ minishell($exit_minishell) bash($exit_bash) ]\033[m  " | tr '\n' ' '
+					((TESTS_KO_EXIT++))
+					((failed++))
+				else
+					echo -ne "✅  "
+					((TESTS_OK++))
+				fi
+			fi
+
+			# Check for crashes
+			if [[ $test_crash == "true" ]] ; then
+				echo -ne "\033[1;36mCRASH:\033[m "
+				case $exit_minishell in
+					132) crash_type="SIGILL" ;;
+					134) crash_type="SIGABRT" ;;
+					136) crash_type="SIGFPE" ;;
+					135) crash_type="SIGBUS" ;;
+					137) crash_type="SIGKILL" ;;
+					139) crash_type="SIGSEGV" ;;
+					159) crash_type="SIGSYS" ;;
+					*) crash_type="" ;;
+				esac
+				if [[ -n $crash_type ]] ; then
+					echo -ne "❌\033[1;31m [ $crash_type ]\033[m  " | tr '\n' ' '
+					((CRASHES++))
+					((failed++))
+				else
+					echo -ne "✅  "
+				fi
 			fi
 
 			# Check for leaks
@@ -524,6 +655,7 @@ run_test() {
 				if [[ "$leak_found" -ne 0 ]] ; then
 					echo -ne "❌ "
 					((LEAKS++))
+					((failed++))
 					mkdir -p "$OUTDIR/$dir_name/$file_name" 2>/dev/null
 					mv "$TMP_OUTDIR/tmp_valgrind_out" "$OUTDIR/$dir_name/$file_name/${i}_valgrind_out" 2>/dev/null
 				else
@@ -536,15 +668,10 @@ run_test() {
 			((i++))
 			((TEST_COUNT++))
 			echo -e "\033[0;90m$file:$tmp_line_count\033[m  "
-			if [[ $ONE == 1 && $TWO == 1 && $THREE == 1 ]] ; then
-				((GOOD_TEST++))
-				((ONE--))
-				((TWO--))
-				((THREE--))
+			if [[ $failed -eq 0 ]] ; then
+				((TESTS_PASSED++))
 			else
-				ONE=0
-				TWO=0
-				THREE=0
+				((TESTS_KO += failed))
 			fi
 		fi
 	done < "$file"
@@ -553,40 +680,93 @@ run_test() {
 }
 
 print_stats() {
+	local line
+
 	echo "🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁"
 	echo -e "🏁                                    \033[1;31mRESULT\033[m                                    🏁"
 	echo "🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁"
-	printf "\033[1;35m%-4s\033[m" "             TOTAL TEST COUNT: $TEST_COUNT "
-	printf "\033[1;32m TESTS PASSED: $GOOD_TEST\033[m "
-	if [[ $LEAKS == 0 ]] ; then
-		printf "\033[1;32m LEAKING: $LEAKS\033[m "
-	else
-		printf "\033[1;31m LEAKING: $LEAKS\033[m "
+	line="\033[1;35mTOTAL TEST COUNT: $TEST_COUNT\033[m"
+	line+="  \033[1;32mTESTS PASSED: $TESTS_PASSED\033[m"
+	if [[ -n $LEAKS ]] ; then
+		if [[ $LEAKS == 0 ]] ; then
+			line+="  \033[1;32mLEAKING: $LEAKS\033[m"
+		else
+			line+="  \033[1;31mLEAKING: $LEAKS\033[m"
+		fi
 	fi
-	echo ""
-	echo -ne "\033[1;34m                     STD_OUT:\033[m "
-	if [[ $TEST_KO_OUT == 0 ]] ; then
-		echo -ne "\033[1;32m✓ \033[m  "
-	else
-		echo -ne "\033[1;31m$TEST_KO_OUT\033[m  "
+	print_centered "$line"
+
+	line=""
+	if [[ -n $TESTS_KO_OUT ]] ; then
+		line="\033[1;34mSTD_OUT:\033[m "
+		if [[ $TESTS_KO_OUT == 0 ]] ; then
+			line+="\033[1;32m✓\033[m"
+		else
+			line+="\033[1;31m$TESTS_KO_OUT\033[m"
+		fi
 	fi
-	echo -ne "\033[1;33mSTD_ERR:\033[m "
-	if [[ $TEST_KO_ERR == 0 ]] ; then
-		echo -ne "\033[1;32m✓ \033[m  "
-	else
-		echo -ne "\033[1;31m$TEST_KO_ERR\033[m  "
+	if [[ -n $TESTS_KO_ERR ]] ; then
+		line+="  \033[1;33mSTD_ERR:\033[m "
+		if [[ $TESTS_KO_ERR == 0 ]] ; then
+			line+="\033[1;32m✓\033[m"
+		else
+			line+="\033[1;31m$TESTS_KO_ERR\033[m"
+		fi
 	fi
-	echo -ne "\033[1;36mEXIT_CODE:\033[m "
-	if [[ $TEST_KO_EXIT == 0 ]] ; then
-		echo -ne "\033[1;32m✓ \033[m  "
-	else
-		echo -ne "\033[1;31m$TEST_KO_EXIT\033[m  "
+	if [[ -n $TESTS_KO_EXIT ]] ; then
+		line+="  \033[1;36mEXIT_CODE:\033[m "
+		if [[ $TESTS_KO_EXIT == 0 ]] ; then
+			line+="\033[1;32m✓\033[m"
+		else
+			line+="\033[1;31m$TESTS_KO_EXIT\033[m"
+		fi
 	fi
-	echo ""
-	echo -e "\033[1;33m                         TOTAL FAILED AND PASSED CASES:"
-	echo -e "\033[1;31m                                     ❌ $FAILED \033[m  "
-	echo -ne "\033[1;32m                                     ✅ $TEST_OK \033[m  "
-	echo ""
+	if [[ -n $CRASHES ]] ; then
+		if [[ $CRASHES == 0 ]] ; then
+			line+="  \033[1;32mCRASHING: $CRASHES\033[m"
+		else
+			line+="  \033[1;31mCRASHING: $CRASHES\033[m"
+		fi
+	fi
+	print_centered "$line"
+
+	print_centered "\033[1;33mTOTAL FAILED AND PASSED CASES:\033[m"
+	echo -e "\033[1;31m                                      ❌ $TESTS_KO \033[m"
+	echo -e "\033[1;32m                                      ✅ $TESTS_OK \033[m"
+}
+
+update_tester() {
+	cd "$RUNDIR" || return 1
+	if git rev-parse --is-inside-work-tree >/dev/null 2>&1 ; then
+		echo "Checking for updates..."
+		git pull 2>/dev/null | head -n 1 | grep "Already up to date." || { echo "Tester updated." && cd - >/dev/null && exec "$0" --no-update "${SCRIPT_ARGS[@]}" ; exit ; }
+	fi
+	cd - >/dev/null
+}
+
+# Prompt the user for confirmation
+# Default is 'no', for 'yes' needs y/Y/yes/Yes + Enter key
+prompt_with_enter() {
+    echo -e "$1 [\e[1my\e[0m/\e[1mN\e[0m]"
+    read -rp "> "
+    if [[ "$REPLY" =~ ^[Yy]([Ee][Ss])?$ ]]; then
+        return 0
+    fi
+    return 1
+}
+
+strip_ansi() {
+    echo -ne "${1}" | sed -r "s/(\033|\x1B|\x1b|\e)\[(([0-9]{1,3};)*[0-9]{1,3})?[mGK]//g"
+}
+
+print_centered() {
+    local text=$1
+    local total_length=82
+	local pure_text="$(strip_ansi "$text")"
+    local text_length=${#pure_text}
+    local padding=$(( (total_length - text_length + 1) / 2 ))
+
+    printf "%*s%b\n" $padding "" "$text"
 }
 
 cleanup() {

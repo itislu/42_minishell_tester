@@ -1,3 +1,7 @@
+# **************************************************************************** #
+#                                    NO ENV                                    #
+# **************************************************************************** #
+
 unset PATH
 ls
 
@@ -121,7 +125,7 @@ stop
 /bin/rm -rf out2
 /bin/rm -rf out3
 
-/bin/cat Makefile > out >>out1 >out2 | /bin/cat << stop > out3 | /bin/ls > > | /bin/cat << file
+/bin/cat Makefile > out >>out1 >out2 | /bin/cat << stop > out3 | /bin/ls | /bin/cat << file
 will make you cry
 stop
 /bin/rm -rf out

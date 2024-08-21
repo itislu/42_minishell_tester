@@ -1,5 +1,5 @@
 # **************************************************************************** #
-#                                     UNSET                                    #
+#                                    UNSET                                     #
 # **************************************************************************** #
 
 unset
@@ -25,6 +25,9 @@ unset $
 unset "$"
 
 export TEST=100
+echo $TEST
+unset TEST
+echo $TEST
 
 unset doesntexist
 
@@ -108,3 +111,24 @@ unset HOME
 unset HOME
 unset HOME
 /bin/echo $HOME
+
+unset $PATH
+ECHO -nnnn
+
+unset $PATH
+ECHO -n
+
+unset $PATH
+ECHo -n
+
+unset $PATH
+ECHO "-n"
+
+unset $PATH
+EcHO -nnnn
+
+unset $PATH
+echo -nnnnnnnn
+
+unset $PATH
+ls

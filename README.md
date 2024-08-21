@@ -1,6 +1,6 @@
 <h1 align=center>📖 42_minishell_tester</h1>
 <h2 align="center">Forked from <a href="https://github.com/zstenger93">zstenger93</a>'s <a href="https://github.com/zstenger93/42_minishell_tester">original tester</a> by <a href="https://github.com/LeaYeh">LeaYeh</a> and <a href="https://github.com/itislu">itislu</a> from 42 Vienna</h2>
-<img align=center src="https://github.com/LeaYeh/42_minishell_tester/blob/master/media/tester.png">
+<img align=center src="/media/tester.png">
 
 # Updates
 
@@ -58,59 +58,7 @@ mstest
 
 # How To Launch the Tester
 
-<img align=center src="https://github.com/LeaYeh/42_minishell_tester/blob/master/media/usage.png">
-
-```
-mstest m  # Run mandatory tests
-```
-```
-mstest vm  # Run mandatory tests with memory leak checks
-```
-```
-mstest b  # Run bonus tests
-```
-```
-mstest vb  # Run bonus tests with memory leak checks
-```
-```
-mstest ne  # Run empty environment tests
-```
-```
-mstest vne  # Run empty environment tests with memory leak checks
-```
-```
-mstest d  # Run death tests (hardcore)
-```
-```
-mstest vd  # Run death tests with memory leak checks (hardcore)
-```
-```
-mstest a  # Run all tests
-```
-```
-mstest va  # Run all tests with memory leak checks
-```
-```
-mstest -l  # Enable memory leak checks for any test
-```
-```
-mstest --no-std-fds  # Don't report fd leaks of stdin, stdout, and stderr for any test
-```
-```
-mstest -n  # Run any test with an empty environment
-```
-```
-mstest -f <file>  # Run tests specified in a file
-```
-```
-mstest --dir <directory>  # Run tests specified in a directory
-```
-```
-mstest --non-posix  # Compare with normal bash instead of POSIX mode bash
-```
-```
-mstest -h  # Display the usage instructions
-```
+<img align=center src="/media/usage.png">
 
 ---
 

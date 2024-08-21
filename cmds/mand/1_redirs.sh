@@ -159,6 +159,7 @@ rm tmp_redir_out
 touch tmp_redir_out_file1
 chmod -r tmp_redir_out_file1
 /bin/echo 1 > tmp_redir_out tmp_redir_out_file1
+rm tmp_redir_out_file1
 
 /bin/grep 1 < inputfile
 
@@ -252,3 +253,17 @@ lim
 
 >> out
 /bin/rm -f out
+
+echo segf > echo is this invalid
+cat echo
+rm -f echo
+
+echo test |  <<lala
+
+echo | > la
+cat la
+rm -f la
+
+echo yolo | eco test >> test
+cat test
+rm -f test

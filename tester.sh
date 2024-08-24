@@ -780,6 +780,3 @@ sigint_trap() {
 
 # Start the tester
 main "$@"
-
-# Clean all tmp files
-[[ $1 != "-f" ]] && rm -f tmp_*

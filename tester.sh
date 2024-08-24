@@ -119,7 +119,9 @@ main() {
 		echo "$GH_BRANCH=$TESTS_KO" >> "$GITHUB_ENV"
 	fi
 
-	if [[ $LEAKS -ne 0 || $CRASHES -ne 0 ]] ; then
+	if [[ $CRASHES -ne 0 ]] ; then
+		exit 2
+	elif [[ $LEAKS -ne 0 ]] ; then
 		exit 1
 	else
 		exit 0

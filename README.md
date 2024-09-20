@@ -8,6 +8,7 @@
 - More rigorous memory leak checks.
 - Memory leak checks in child processes without false positives from external commands.
 - File descriptor leak checks.
+- Crash detection.
 - Smart stderror comparison with bash.
 - Output failed test case and valgrind results to files.
 - Updated test cases for updated subject (v7.1).

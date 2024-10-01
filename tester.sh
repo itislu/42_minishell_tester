@@ -5,7 +5,7 @@ export MINISHELL_PATH=./
 export EXECUTABLE=minishell
 RUNDIR=$HOME/42_minishell_tester
 DATE=$(date +%Y-%m-%d_%H.%M.%S)
-TMP_OUTDIR=$RUNDIR/tmp_$DATE
+TMP_OUTDIR=$(mktemp -d)
 OUTDIR=$MINISHELL_PATH/mstest_output_$DATE
 
 # Test how minishell behaves to adjust the output filters to it

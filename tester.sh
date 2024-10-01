@@ -110,7 +110,7 @@ main() {
 		echo "#                           MINISHELL NOT UP TO DATE                           #"
 		echo "#                                 COMPILING ...                                #"
 		echo -e "# **************************************************************************** #\033[m"
-		if ! make -s -C $MINISHELL_PATH ; then
+		if ! make -s -C $MINISHELL_PATH || [[ ! -f $MINISHELL_PATH/$EXECUTABLE ]] ; then
 			echo -e "\033[1;31mCOMPILING FAILED\033[m" && exit 1
 		fi
 	fi

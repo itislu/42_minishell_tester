@@ -40,9 +40,9 @@ check_exit_stderr() {
 	is_stdout_exit_eof=$?
 
 	if [[ $is_stdout_exit_builtin -eq 0 && $is_stdout_exit_eof -eq 0 ]] ; then
-		reason="when calling the 'exit' builtin and when receiving CTRL+D (EOF)"
+		reason="when calling the exit builtin and when receiving CTRL+D (EOF)"
 	elif [[ $is_stdout_exit_builtin -eq 0 ]] ; then
-		reason="when calling the 'exit' builtin"
+		reason="when calling the exit builtin"
 	elif [[ $is_stdout_exit_eof -eq 0 ]] ; then
 		reason="when receiving CTRL+D (EOF)"
 	else

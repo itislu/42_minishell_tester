@@ -16,7 +16,7 @@ unset =""
 
 unset ==
 
-unset ?
+unset $?
 
 unset "?"
 

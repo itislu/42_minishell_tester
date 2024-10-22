@@ -242,7 +242,7 @@ echo $T
 e""""""""""""cho
 
 export T='|'
-echo $T echo lala $T echo $T echo ?
+echo $T echo lala $T echo $T echo $?
 
 export T="<<"
 $T.

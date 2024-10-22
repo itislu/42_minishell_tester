@@ -57,7 +57,7 @@ cd ../../..
 
 cd "wtf" >/dev/null
 
-cd ?
+cd "?"
 
 cd +
 
@@ -91,7 +91,7 @@ cd ..
 pwd
 
 pwd
-cd ?
+cd '?'
 pwd
 
 pwd

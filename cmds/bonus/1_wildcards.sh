@@ -66,4 +66,5 @@ rm -f tmp_out*
 export test=" * "
 touch "$USER * ?eHallo"
 /bin/echo "$USER "*" ?e"*
+/bin/echo echo *
 rm -f "$USER * ?eHallo"

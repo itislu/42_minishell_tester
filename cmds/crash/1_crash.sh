@@ -207,3 +207,21 @@ cd -
 pwd
 
 /bin/echo $USER =intergalaktikus miaf*szomez
+
+cd ?
+
+pwd
+cd ?
+pwd
+
+echo $?
+export ?=hallo
+echo $?
+
+unset ?
+
+export X="  A  B  "
+/bin/echo ?$X'2'
+
+export T='|'
+echo $T echo lala $T echo $T echo ?

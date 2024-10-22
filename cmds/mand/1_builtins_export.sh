@@ -120,7 +120,11 @@ env | grep HELLO42
 env | grep HELLO42=T=
 
 echo $?
-export ?=hallo
+export "?"=hallo
+echo $?
+
+echo $?
+export $?=hallo
 echo $?
 
 /bin/echo $test

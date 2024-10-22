@@ -862,7 +862,7 @@ update_tester() {
 	cd "$RUNDIR" || return 1
 	if git rev-parse --is-inside-work-tree >/dev/null 2>&1 ; then
 		echo "Checking for updates..."
-		git pull 2>/dev/null | head -n 1 | grep "Already up to date." || { echo "Tester updated." && cd - >/dev/null && exec "$0" --no-update "${SCRIPT_ARGS[@]}" ; exit ; }
+		git pull 2>/dev/null | head -n 1 | grep "Already up to date." || { echo -e "\033[1;92mTester updated.\033[m" && cd - >/dev/null && exec "$0" --no-update "${SCRIPT_ARGS[@]}" ; exit ; }
 	fi
 	cd - >/dev/null
 }

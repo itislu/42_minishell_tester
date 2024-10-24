@@ -267,3 +267,9 @@ rm -f la
 echo yolo | eco test >> test
 cat test
 rm -f test
+
+echo hello > outfile
+echo world >> outfile
+cat outfile
+echo buuuh < outfile
+rm -f outfile

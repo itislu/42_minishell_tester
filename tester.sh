@@ -183,8 +183,8 @@ main() {
 		echo "#                                 COMPILING ...                                #"
 		echo -e "# **************************************************************************** #${RESET}"
 		if ! make -s -C $MINISHELL_PATH || [[ ! -f $MINISHELL_PATH/$EXECUTABLE ]] ; then
-			echo -e "${BOLD}${RED}COMPILING FAILED${RESET}"
-			if [[ -x $MINISHELL_PATH/$EXECUTABLE ]] || ([[ -f $MINISHELL_PATH/$EXECUTABLE ]] && chmod +x $MINISHELL_PATH/$EXECUTABLE) ; then
+			echo -e "${BOLD}${RED}COMPILATION FAILED${RESET}"
+			if [[ -f $MINISHELL_PATH/$EXECUTABLE ]] && { [[ -x $MINISHELL_PATH/$EXECUTABLE ]] || chmod +x $MINISHELL_PATH/$EXECUTABLE ; } ; then
 				echo -e "${BOLD}${YELLOW}USING EXISTING EXECUTABLE${RESET}"
 			else
 				exit 1
@@ -197,8 +197,8 @@ main() {
 		echo "#                                 COMPILING ...                                #"
 		echo -e "# **************************************************************************** #${RESET}"
 		if ! make -s -C $MINISHELL_PATH || [[ ! -f $MINISHELL_PATH/$EXECUTABLE ]] ; then
-			echo -e "${BOLD}${RED}COMPILING FAILED${RESET}"
-			if [[ -x $MINISHELL_PATH/$EXECUTABLE ]] || ([[ -f $MINISHELL_PATH/$EXECUTABLE ]] && chmod +x $MINISHELL_PATH/$EXECUTABLE) ; then
+			echo -e "${BOLD}${RED}COMPILATION FAILED${RESET}"
+			if [[ -f $MINISHELL_PATH/$EXECUTABLE ]] && { [[ -x $MINISHELL_PATH/$EXECUTABLE ]] || chmod +x $MINISHELL_PATH/$EXECUTABLE ; } ; then
 				echo -e "${BOLD}${YELLOW}USING EXISTING EXECUTABLE${RESET}"
 			else
 				exit 1

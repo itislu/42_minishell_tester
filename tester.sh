@@ -1,12 +1,13 @@
 #!/usr/bin/env -S --default-signal bash
 
 # Change if you store the tester in another PATH
-MINISHELL_PATH=.
+MINISHELL_PATH=$(pwd)
 EXECUTABLE=minishell
 RUNDIR=$HOME/42_minishell_tester
 DATE=$(date +%Y-%m-%d_%H.%M.%S)
 OUTDIR=$MINISHELL_PATH/mstest_output_$DATE
 TMP_OUTDIR=$(mktemp -d)
+TMP_TESTDIR=$(mktemp -d)
 
 # Colors
 RESET="\033[0m"
@@ -626,6 +627,7 @@ run_test() {
 			done
 
 			# Run the test
+			cd "$TMP_TESTDIR" &>/dev/null
 			if [[ $test_leaks == "true" ]] ; then
 				echo -n "$input" | eval $ENV $valgrind $MINISHELL &>/dev/null
 			fi
@@ -635,6 +637,7 @@ run_test() {
 				echo -n "enable -n .$NL$input" | eval $ENV $BASH > >(to_hex > "$TMP_OUTDIR/tmp_out_bash.hex") 2> >(to_hex > "$TMP_OUTDIR/tmp_err_bash.hex")
 				exit_bash=$?
 			fi
+			cd - &>/dev/null
 
 			# Check stdout
 			if [[ $test_stdout == "true" ]] ; then
@@ -914,6 +917,7 @@ print_centered() {
 
 cleanup() {
 	rm -rf "$TMP_OUTDIR" 2>/dev/null
+	rm -rf "$TMP_TESTDIR" 2>/dev/null
 }
 
 sigint_trap() {

@@ -696,16 +696,16 @@ run_test() {
 						sed -i -E "s/$MINISHELL_EXIT_MSG_STDERR_BUILTIN_HEX( *$| *0a)/\1/g" "$TMP_OUTDIR/tmp_err_minishell.hex"
 					fi
 				fi
-				from_hex <"$TMP_OUTDIR/tmp_err_minishell.hex" >"$TMP_OUTDIR/tmp_err_minishell"
 				from_hex <"$TMP_OUTDIR/tmp_err_bash.hex" >"$TMP_OUTDIR/tmp_err_bash"
 				if grep -q '^\(bash: line [0-9]*: \|bash: \)' "$TMP_OUTDIR/tmp_err_bash" ; then
 					# Normalize minishell stderr by removing its program name prefix
-					sed -i "s/^\\($MINISHELL_ERR_NAME: line [0-9]*: \\|$MINISHELL_ERR_NAME: \\)//" "$TMP_OUTDIR/tmp_err_minishell"
+					sed -i "s/^\\($(to_hex "$MINISHELL_ERR_NAME: line ")*$(to_hex ": ")\\|$(to_hex "$MINISHELL_ERR_NAME: ")\\)//" "$TMP_OUTDIR/tmp_err_minishell.hex"
 					# Normalize bash stderr by removing the program name and line number prefixes
 					sed -i 's/^\(bash: line [0-9]*: \|bash: \)//' "$TMP_OUTDIR/tmp_err_bash"
 					# Remove the next line after a specific syntax error message in bash stderr
 					sed -i '/^syntax error near unexpected token/{n; d}' "$TMP_OUTDIR/tmp_err_bash"
 				fi
+				from_hex <"$TMP_OUTDIR/tmp_err_minishell.hex" >"$TMP_OUTDIR/tmp_err_minishell"
 				if ! diff -q "$TMP_OUTDIR/tmp_err_minishell" "$TMP_OUTDIR/tmp_err_bash" >/dev/null ; then
 					echo -ne "❌  " | tr '\n' ' '
 					((TESTS_KO_ERR++))

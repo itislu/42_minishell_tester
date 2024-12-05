@@ -884,7 +884,7 @@ update_tester() {
 
 to_hex() {
 	if [[ $# -gt 0 ]] ; then
-		od -An -tx1 -v <<< "$*" | tr -d '\n' | sed 's/^ *//'
+		printf '%s' "$*" | od -An -tx1 -v | tr -d '\n' | sed 's/^ *//'
 	else
 		od -An -tx1 -v | tr -d '\n' | sed 's/^ *//'
 	fi
@@ -892,7 +892,7 @@ to_hex() {
 
 from_hex() {
 	if [[ $# -gt 0 ]] ; then
-		printf "$(echo "$*" | tr -d ' ' | sed -E 's/(..)/\\x\1/g')"
+		printf "$(printf '%s' "$*" | tr -d ' ' | sed -E 's/(..)/\\x\1/g')"
 	else
 		printf "$(tr -d ' ' | sed -E 's/(..)/\\x\1/g')"
 	fi
